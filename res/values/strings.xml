@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Battery Fix</string>
+	<string name="autoFix">Auto-fix when power detected</string>
+	<string name="notifications">Show notifications</string>
+	<string name="autoReboot">Auto-reboot when done charging</string>
+	<string name="force">Run the fix now</string>
+	<string name="fix">Fix battd</string>
+	<string name="msg_calibrate">Starting battery fix</string>
+	<string name="msg_autocalibrate">Power detected, starting battery fix</string>
+	<string name="msg_start">Monitoring service started</string>
+	<string name="msg_stop">Monitoring service stopped</string>
+	<string name="msg_done">Battery fix done! Will reboot when the battery is done changing.</string>
+	<string name="msg_done_reminder">Battery fix done! Remember to reboot for changes to take effect.</string>
+	<string name="msg_done_reboot">Battery fix done.\nYou need to reboot your device for changes to take effect.\n\nReboot now?</string>
+	<string name="msg_rebooting">Rebooting...</string>
+	<string name="msg_fixing">Fixing battd...</string>
+	<string name="msg_autoreboot">Performing auto-reboot...</string>
+	<string name="msg_fixed">Battd fixed.</string>
+	<string name="reboot_yes">Yes</string>
+	<string name="reboot_no">No</string>
+	<string name="err_calibrate">Error running battery fix!\n(%s)</string>
+	<string name="err_fix">Error fixing battd!\n(%s)</string>
+	<string name="err_reboot">Error rebooting device!\n(%s)</string>
+	<string name="err_autoreboot">Error performing auto-reboot!</string>
+	<string name="err_start">Cannot start monitoring service!\n(%s)</string>
+	<string name="err_stop">Cannot stop monitoring service!\n(%s)</string>
+	<string name="err_busybox">busybox not found</string>
+	<string name="batt_title">Battery monitor</string>
+	<string name="batt_source">Power source</string>
+	<string name="batt_source_battery">Battery</string>
+	<string name="batt_source_ac">AC</string>
+	<string name="batt_source_usb">USB</string>
+	<string name="batt_source_unknown">Unknown</string>
+	<string name="batt_health">Health</string>
+	<string name="batt_state">State</string>
+	<string name="batt_state_charging">Charging</string>
+	<string name="batt_state_discharging">Discharging</string>
+	<string name="batt_state_unknown">Unknown</string>
+	<string name="batt_state_full">Full</string>
+	<string name="batt_voltage">Voltage</string>
+	<string name="batt_temp">Temperature</string>
+	<string name="batt_actual">Actual percentage</string>
+	<string name="batt_shown">Percentage shown</string>
+	<string name="menu_licence">Licence</string>
+	<string name="menu_about">About</string>
+	<string name="menu_exit">Exit</string>
+	<string name="text_about"><![CDATA[
+		<big><b>Atrix Battery Fix</b></big><br />
+		version %s<br />
+		<br />
+		Copyright &copy; by ravilov &lt;<a href="mailto:ravilov@linux.hr?subject=AtrixBatteryFix">ravilov@linux.hr</a>&gt;<br />
+		&nbsp;&bull;&nbsp;thanks to <a href="http://forum.xda-developers.com/member.php?u=1555295">xploited</a> for the original <a href="http://forum.xda-developers.com/showpost.php?p=16240746&postcount=1">&quot;battery pull&quot; method</a><br />
+		&nbsp;&bull;&nbsp;thanks to <a href="http://forum.xda-developers.com/member.php?u=2981495">bimasakti85</a> for the original <a href="http://forum.xda-developers.com/showpost.php?p=29983401&amp;postcount=319">battd fix method</a><br />
+		&nbsp;&bull;&nbsp;thanks to countless <a href="http://forum.xda-developers.com/">XDA</a> members for testing, commenting and contributing ideas<br />
+		<p>This app helps in fixing the common &quot;<i>battery won\'t charge beyond xx%%</i>&quot; bug that seems to affect most Motorola Atrix phones. </p>
+		<p>In addition, this app deletes the <tt>batterystats.bin</tt> file, thus forcing battery recalibration. It also attempts to fix ownership and permissions of the <tt>battd</tt> daemon and its data and config files. </p>
+		<p>See <a href="http://forum.xda-developers.com/showthread.php?t=1832470">http://forum.xda-developers.com/showthread.php?t=1832470</a> for more info.
+	]]></string>
+	<string name="text_licence"><![CDATA[
+		<big><b>Atrix Battery Fix</b></big><br />
+		version %s<br />
+		Copyright &copy; by ravilov<br />
+		<p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version. </p>
+		<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. </p>
+		<p>You should have received a copy of the GNU General Public License along with this program. If not, see <a href="http://www.gnu.org/licenses/gpl.txt">http://www.gnu.org/licenses/gpl.txt</a>. </p>
+	]]></string>
+</resources>

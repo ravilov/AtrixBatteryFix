@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/dialog_root" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="fill_parent" android:padding="10dp">
+	<ScrollView android:id="@+id/dialog_scroll" android:isScrollContainer="true" android:layout_width="fill_parent" android:layout_height="fill_parent" android:scrollbars="vertical" android:scrollbarStyle="insideOverlay">
+		<TextView android:id="@+id/dialog_text" android:layout_width="fill_parent" android:layout_height="fill_parent" android:textSize="12dp" android:textColor="@android:color/secondary_text_dark_nodisable" android:textColorHighlight="@android:color/secondary_text_dark_nodisable" />
+	</ScrollView>
+</LinearLayout>

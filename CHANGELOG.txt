@@ -1,0 +1,50 @@
+0.1 FINAL
+	- mostly just cosmetic changes
+
+
+0.1-beta4
+	- instead of running hardcoded shell commands, now runs external shell
+	  scripts in the app's datadir (so you can modify the scripts to your own
+	  liking)
+	- all shell commands/scripts are now executed through busybox instead of
+	  default system shell (so busybox is now required)
+	- separated fixing the battd datafiles (which is normally needed every so
+	  often) from fixing battd permissions and ownership (which should be
+	  needed only once)
+	- cleanup and other improvements
+
+
+0.1-beta3
+	- run fix and recalibration right before auto-reboot too, just in case
+
+
+0.1-beta2
+	- added deleting batterystats.bin
+	- added fixing ownership and permissions of battd and friends
+	- cleaned up the "about" and "licence" texts
+	- possibly other fixes and improvements I forgot about
+
+
+0.1-beta1
+	- hopefully fixed the reboot-when-charged issue
+
+
+0.1-alpha3
+	- fixed some bugs that caused issues on ICS and newer
+	- cleaned up the checkbox logic
+	- slightly improved the UI
+	- other minor fixes and improvements
+
+
+0.1-alpha2
+	- (hopefully) fixed su and other issues
+	- added option to reboot the phone when it's done charging (hopefully
+	  that actually works )
+	- added real-time battery monitor
+	- general cleanup
+	- other things I forgot
+
+
+0.1-alpha1
+	- initial release
+

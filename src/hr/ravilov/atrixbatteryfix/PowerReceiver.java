@@ -1,0 +1,43 @@
+package hr.ravilov.atrixbatteryfix;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Looper;
+import hr.ravilov.atrixbatteryfix.BatteryFix;
+import hr.ravilov.atrixbatteryfix.BatteryInfo;
+
+public class PowerReceiver extends BroadcastReceiver {
+	@Override
+	public void onReceive(final Context ctx, final Intent i) {
+		Thread th;
+		th = new Thread(new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(350);
+				}
+				catch (Exception ex) { }
+				BatteryFix.init(ctx, true);
+				BatteryInfo.init(ctx);
+				if (!BatteryInfo.isOnPower || BatteryInfo.isDischarging) {
+					BatteryFix.monCondStop();
+					return;
+				}
+				Looper.prepare();
+				if (BatteryFix.autoFix) {
+					BatteryFix.run();
+				}
+				BatteryInfo.refresh();
+				if (BatteryFix.autoReboot && !BatteryInfo.isFull) {
+					BatteryFix.monCondStart();
+				} else {
+					BatteryFix.monCondStop();
+				}
+				Looper.loop();
+				Looper.myLooper().quit();
+			}
+		});
+		th.setDaemon(true);
+		th.start();
+	}
+}
