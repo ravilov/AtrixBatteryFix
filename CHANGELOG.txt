@@ -1,3 +1,15 @@
+0.15
+	- about box is now shown on first run
+	- rearranged and cleaned up the about text, added the donate link
+	  (which hopefully works)
+	- fix for busybox that has the 'ash' applet instead of 'sh'
+	- busybox is no longer required, will try to use system shell
+	  if busybox is not found
+	- fixed a progress dialog issue upon screen rotation
+	- uploaded source code to github
+	  (https://github.com/ravilov/AtrixBatteryFix)
+
+
 0.1 FINAL
 	- mostly just cosmetic changes
 

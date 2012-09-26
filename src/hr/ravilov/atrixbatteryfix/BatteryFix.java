@@ -24,6 +24,7 @@ public class BatteryFix {
 	public static boolean autoFix;
 	public static boolean showNotifications;
 	public static boolean autoReboot;
+	public static boolean showAbout;
 	private static NotificationManager nm;
 
 	static public void init(Context c, boolean trig) {
@@ -38,6 +39,7 @@ public class BatteryFix {
 		autoFix = prefs.getBoolean(MyUtils.PREF_AUTOFIX, true);
 		showNotifications = prefs.getBoolean(MyUtils.PREF_NOTIFICATIONS, true);
 		autoReboot = prefs.getBoolean(MyUtils.PREF_AUTOREBOOT, false);
+		showAbout = prefs.getBoolean(MyUtils.PREF_SHOWABOUT, true);
 	}
 
 	static public void savePrefs() {
@@ -45,6 +47,7 @@ public class BatteryFix {
 		editor.putBoolean(MyUtils.PREF_AUTOFIX, autoFix);
 		editor.putBoolean(MyUtils.PREF_NOTIFICATIONS, showNotifications);
 		editor.putBoolean(MyUtils.PREF_AUTOREBOOT, autoReboot);
+		editor.putBoolean(MyUtils.PREF_SHOWABOUT, showAbout);
 		editor.commit();
 	}
 
@@ -100,8 +103,8 @@ public class BatteryFix {
 	}
 
 	static public void recalibrate() throws Exception {
-		if (MyUtils.findBusybox() == null) {
-			throw new Exception(getContext().getText(R.string.err_busybox).toString());
+		if (MyUtils.shFind() == null) {
+			throw new Exception(getContext().getText(R.string.err_shell).toString());
 		}
 		// test run, to see if we can su at all
 		String res = MyUtils.suRun(null);
@@ -115,8 +118,8 @@ public class BatteryFix {
 	}
 
 	static public void fixBattd() throws Exception {
-		if (MyUtils.findBusybox() == null) {
-			throw new Exception(getContext().getText(R.string.err_busybox).toString());
+		if (MyUtils.shFind() == null) {
+			throw new Exception(getContext().getText(R.string.err_shell).toString());
 		}
 		// test run, to see if we can su at all
 		String res = MyUtils.suRun(null);
@@ -155,7 +158,7 @@ public class BatteryFix {
 					return;
 				}
 				String msg = String.format(ctx.getText(R.string.err_reboot).toString(), ex.getMessage());
-				// FIXME: toast doesn't work for some reason, possibly because it's called from a thread
+				// FIXME: toast doesn't work for some reason, possibly because it's called from a non-UI thread?
 				//Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
 				showNotification(msg);
 			}

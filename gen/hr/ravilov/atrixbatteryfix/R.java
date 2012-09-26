@@ -24,8 +24,8 @@ public final class R {
         public static final int batt_voltage=0x7f07000a;
         public static final int buttonFix=0x7f070007;
         public static final int buttonForce=0x7f070006;
+        public static final int dialog_bottom=0x7f070001;
         public static final int dialog_root=0x7f070000;
-        public static final int dialog_scroll=0x7f070001;
         public static final int dialog_text=0x7f070002;
         public static final int menu_about=0x7f07000e;
         public static final int menu_exit=0x7f070010;
@@ -65,10 +65,10 @@ public final class R {
         public static final int batt_title=0x7f05001a;
         public static final int batt_voltage=0x7f050026;
         public static final int err_autoreboot=0x7f050016;
-        public static final int err_busybox=0x7f050019;
         public static final int err_calibrate=0x7f050013;
         public static final int err_fix=0x7f050014;
         public static final int err_reboot=0x7f050015;
+        public static final int err_shell=0x7f050019;
         public static final int err_start=0x7f050017;
         public static final int err_stop=0x7f050018;
         public static final int fix=0x7f050005;
@@ -87,10 +87,11 @@ public final class R {
         public static final int msg_rebooting=0x7f05000d;
         public static final int msg_start=0x7f050008;
         public static final int msg_stop=0x7f050009;
+        public static final int no_show_about=0x7f05002d;
         public static final int notifications=0x7f050002;
         public static final int reboot_no=0x7f050012;
         public static final int reboot_yes=0x7f050011;
-        public static final int text_about=0x7f05002d;
-        public static final int text_licence=0x7f05002e;
+        public static final int text_about=0x7f05002e;
+        public static final int text_licence=0x7f05002f;
     }
 }

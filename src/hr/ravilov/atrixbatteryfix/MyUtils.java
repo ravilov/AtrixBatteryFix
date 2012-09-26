@@ -20,11 +20,13 @@ import android.util.Log;
 public class MyUtils {
 	static private Method reboot = null;
 	static private String su = null;
+	static private String sh = null;
 
 	static public final String
 		PREF_AUTOFIX = "enabled",
 		PREF_AUTOREBOOT = "autoReboot",
-		PREF_NOTIFICATIONS = "notifications"
+		PREF_NOTIFICATIONS = "notifications",
+		PREF_SHOWABOUT = "showAbout"
 	;
 	static protected final String[] suCandidates = {
 		"/system/xbin/su",
@@ -32,6 +34,10 @@ public class MyUtils {
 		"/system/bin/su",
 		"/sbin/su",
 		"/data/local/bin/su",
+	};
+	static protected final String[] bbShCandidates = {
+		"sh",
+		"ash",
 	};
 
 	static public String getStackTrace(Exception ex) {
@@ -78,12 +84,9 @@ public class MyUtils {
 		return "su";
 	}
 
-	static public String suRun(String dir, String... cmd) throws Exception {
-		if (su == null) {
-			su = suFind();
-		}
-		if (su.equals("")) {
-			throw new Exception("su binary not found");
+	static public String runShellLike(String shell, String dir, String... cmd) throws Exception {
+		if (shell == null || shell.equals("")) {
+			throw new Exception("shell not defined");
 		}
 		try {
 			StringBuilder cmds = new StringBuilder();
@@ -94,10 +97,10 @@ public class MyUtils {
 					cmds.append(cmd[i]);
 				}
 			}
-			Log.v("<suexec>", String.format("Executing [%s] using [%s]", cmds.toString(), su));
+			Log.v("<exec>", String.format("Running [%s] using [%s]", cmds.toString(), shell));
 		}
 		catch (Exception ex) { }
-		Process p = (dir == null) ? Runtime.getRuntime().exec(su) : Runtime.getRuntime().exec(su, null, new File(dir));
+		Process p = (dir == null) ? Runtime.getRuntime().exec(shell) : Runtime.getRuntime().exec(shell, null, new File(dir));
 		DataOutputStream os = new DataOutputStream(p.getOutputStream());
 		DataInputStream is = new DataInputStream(p.getInputStream());
 		DataInputStream es = new DataInputStream(p.getErrorStream());
@@ -122,6 +125,26 @@ public class MyUtils {
 		return res;
 	}
 
+	static public String shRun(String dir, String... cmd) throws Exception {
+		if (sh == null) {
+			sh = shFind();
+		}
+		if (sh.equals("")) {
+			throw new Exception("shell not found");
+		}
+		return runShellLike(sh, dir, cmd);
+	}
+
+	static public String suRun(String dir, String... cmd) throws Exception {
+		if (su == null) {
+			su = suFind();
+		}
+		if (su.equals("")) {
+			throw new Exception("su binary not found");
+		}
+		return runShellLike(su, dir, cmd);
+	}
+
 	static public String suRunScript(Context ctx, String dir, int scriptId) throws Exception {
 		String script = ctx.getResources().getResourceEntryName(scriptId);
 		File f = ctx.getFileStreamPath(script);
@@ -136,11 +159,8 @@ public class MyUtils {
 			is.close();
 			os.close();
 		}
-		String sh = findBusybox();
 		if (sh == null) {
-			sh = "sh";
-		} else {
-			sh += " sh";
+			sh = shFind();
 		}
 		return suRun(dir, sh + " '" + f.getAbsolutePath() + "'");
 	}
@@ -199,7 +219,26 @@ public class MyUtils {
 		return null;
 	}
 
-	static public String findBusybox() {
+	static public String busyboxFind() {
 		return pathFind("busybox");
+	}
+
+	static public String shFind() {
+		String bb = busyboxFind();
+		if (bb != null) {
+			for (int i = 0; i < bbShCandidates.length; i++) {
+				String bbsh = bb + " " + bbShCandidates[i];
+				try {
+					String res = runShellLike(bbsh, null);
+					if (res != null && !res.equals("")) {
+						throw new Exception(res);
+					}
+					return bbsh;
+				}
+				catch (Exception ex) { }
+			}
+		}
+		// default - system shell
+		return pathFind("sh");
 	}
 }

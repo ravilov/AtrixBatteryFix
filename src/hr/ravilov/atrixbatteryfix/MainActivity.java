@@ -3,14 +3,17 @@ package hr.ravilov.atrixbatteryfix;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import hr.ravilov.atrixbatteryfix.MyUtils;
 import hr.ravilov.atrixbatteryfix.MyDialog;
@@ -74,6 +77,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 		});
 		th.setDaemon(false);
 		th.start();
+		if (BatteryFix.showAbout) {
+			showAboutDialog(true);
+		}
 	}
 
 	@Override
@@ -81,6 +87,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main, menu);
 		return true;
+	}
+
+	public void onConfigurationChanged(Configuration cfg) {
+		super.onConfigurationChanged(cfg);
 	}
 
 	private void getPrefs() {
@@ -100,6 +110,35 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 		BatteryFix.savePrefs();
 	}
 
+	private void showAboutDialog(boolean firstTime) {
+		MyDialog d = new MyDialog(this);
+		d.setTitle(getText(R.string.menu_about).toString());
+		d.setContents(String.format(getText(R.string.text_about).toString(), MyUtils.getMyVersion(this)));
+		if (firstTime) {
+			final CheckBox show = new CheckBox(this);
+			show.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+			show.setText(R.string.no_show_about);
+			show.setChecked(true);
+			show.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					BatteryFix.showAbout = isChecked ? false : true;
+					BatteryFix.savePrefs();
+				}
+			});
+			d.getBottomView().setVisibility(View.VISIBLE);
+			((LinearLayout)d.getBottomView()).addView(show);
+			d.setOnClose(new MyDialog.OnCloseListener() {
+				@Override
+				public void run() {
+					BatteryFix.showAbout = show.isChecked() ? false : true;
+					BatteryFix.savePrefs();
+				}
+			});
+		}
+		d.show();
+	}
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -116,10 +155,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 				}
 				break;
 			case R.id.menu_about: {
-					MyDialog d = new MyDialog(this);
-					d.setTitle(getText(R.string.menu_about).toString());
-					d.setContents(String.format(getText(R.string.text_about).toString(), MyUtils.getMyVersion(this)));
-					d.show();
+					showAboutDialog(false);
 				}
 				break;
 		}
