@@ -4,7 +4,7 @@
 	<string name="autoFix">Auto-fix when power detected</string>
 	<string name="notifications">Show notifications</string>
 	<string name="autoReboot">Auto-reboot when done charging</string>
-	<string name="force">Run the fix now</string>
+	<string name="force">Run the fix</string>
 	<string name="fix">Fix battd</string>
 	<string name="msg_calibrate">Starting battery fix</string>
 	<string name="msg_autocalibrate">Power detected, starting battery fix</string>

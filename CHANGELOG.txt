@@ -1,3 +1,7 @@
+0.16
+	- bugfix: better handling of invalid or missing datadir
+
+
 0.15
 	- about box is now shown on first run
 	- rearranged and cleaned up the about text, added the donate link

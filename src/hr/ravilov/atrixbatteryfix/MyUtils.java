@@ -149,15 +149,24 @@ public class MyUtils {
 		String script = ctx.getResources().getResourceEntryName(scriptId);
 		File f = ctx.getFileStreamPath(script);
 		if (!f.exists()) {
-			InputStream raw = ctx.getResources().openRawResource(scriptId);
-			BufferedReader is = new BufferedReader(new InputStreamReader(raw, "UTF-8"));
-			BufferedWriter os = new BufferedWriter(new OutputStreamWriter(ctx.openFileOutput(script, Context.MODE_PRIVATE), "UTF-8"));
-			while (is.ready()) {
-				String line = is.readLine();
-				os.write(line + "\n");
+			try {
+				InputStream raw = ctx.getResources().openRawResource(scriptId);
+				BufferedReader is = new BufferedReader(new InputStreamReader(raw, "UTF-8"));
+				BufferedWriter os = new BufferedWriter(new OutputStreamWriter(ctx.openFileOutput(script, Context.MODE_PRIVATE), "UTF-8"));
+				while (is.ready()) {
+					String line = is.readLine();
+					os.write(line + "\n");
+				}
+				is.close();
+				os.close();
 			}
-			is.close();
-			os.close();
+			catch (Exception ex) {
+				String msg = ex.getMessage();
+				if (msg == null || msg.equals("")) {
+					msg = "datadir not found or invalid, please reinstall app";
+				}
+				throw new Exception(msg);
+			}
 		}
 		if (sh == null) {
 			sh = shFind();

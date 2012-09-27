@@ -63,7 +63,11 @@ public class BatteryFix {
 			}
 		}
 		catch (Exception ex) {
-			Toast.makeText(ctx, String.format(ctx.getText(R.string.err_calibrate).toString(), ex.getMessage()), Toast.LENGTH_LONG).show();
+			String msg = ex.getMessage();
+			if (msg == null || msg.equals("")) {
+				msg = ex.toString();
+			}
+			Toast.makeText(ctx, String.format(ctx.getText(R.string.err_calibrate).toString(), msg), Toast.LENGTH_LONG).show();
 			return false;
 		}
 		return true;
@@ -81,7 +85,11 @@ public class BatteryFix {
 			}
 		}
 		catch (Exception ex) {
-			Toast.makeText(ctx, String.format(ctx.getText(R.string.err_fix).toString(), ex.getMessage()), Toast.LENGTH_LONG).show();
+			String msg = ex.getMessage();
+			if (msg == null || msg.equals("")) {
+				msg = ex.toString();
+			}
+			Toast.makeText(ctx, String.format(ctx.getText(R.string.err_fix).toString(), msg), Toast.LENGTH_LONG).show();
 			return false;
 		}
 		return true;
