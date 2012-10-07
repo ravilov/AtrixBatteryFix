@@ -29,10 +29,10 @@ public final class R {
         public static final int dialog_bottom=0x7f080001;
         public static final int dialog_root=0x7f080000;
         public static final int dialog_text=0x7f080002;
-        public static final int menu_about=0x7f08000f;
+        public static final int menu_about=0x7f080010;
         public static final int menu_exit=0x7f080012;
-        public static final int menu_licence=0x7f080010;
-        public static final int menu_settings=0x7f080011;
+        public static final int menu_licence=0x7f080011;
+        public static final int menu_settings=0x7f08000f;
     }
     public static final class layout {
         public static final int dialog=0x7f030000;
