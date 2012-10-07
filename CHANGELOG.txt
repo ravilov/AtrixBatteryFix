@@ -1,3 +1,9 @@
+0.20
+	- added an option to restart the battd service instead of a full reboot
+	- moved some options to a separate settings screen
+	- cleanup here and there
+
+
 0.16
 	- bugfix: better handling of invalid or missing datadir
 
