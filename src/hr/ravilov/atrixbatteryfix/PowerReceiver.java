@@ -28,7 +28,7 @@ public class PowerReceiver extends BroadcastReceiver {
 					BatteryFix.run();
 				}
 				BatteryInfo.refresh();
-				if (BatteryFix.autoReboot && !BatteryInfo.isFull) {
+				if (BatteryFix.autoAction && !BatteryInfo.isFull) {
 					BatteryFix.monCondStart();
 				} else {
 					BatteryFix.monCondStop();

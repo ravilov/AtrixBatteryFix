@@ -3,7 +3,9 @@
 	<string name="app_name">Battery Fix</string>
 	<string name="autoFix">Auto-fix when power detected</string>
 	<string name="notifications">Show notifications</string>
-	<string name="autoReboot">Auto-reboot when done charging</string>
+	<string name="autoAction">Auto-action when done charging</string>
+	<string name="autoActionReboot">Reboot the system</string>
+	<string name="autoActionRestart">Restart the battd service</string>
 	<string name="force">Run the fix</string>
 	<string name="fix">Fix battd</string>
 	<string name="msg_calibrate">Starting battery fix</string>
@@ -12,13 +14,25 @@
 	<string name="msg_stop">Monitoring service stopped</string>
 	<string name="msg_done">Battery fix done! Will reboot when the battery is done changing.</string>
 	<string name="msg_done_reminder">Battery fix done! Remember to reboot for changes to take effect.</string>
-	<string name="msg_done_reboot">Battery fix done.\nYou need to reboot your device for changes to take effect.\n\nReboot now?</string>
-	<string name="msg_rebooting">Rebooting...</string>
-	<string name="msg_fixing">Fixing battd</string>
-	<string name="msg_autoreboot">Performing auto-reboot...</string>
+	<string name="msg_done_action"><![CDATA[
+		<b>Battery fix done.</b><br />
+		<br />
+		You need to either <b>reboot</b> your device or <b>restart</b> the battd service for changes to take effect.
+	]]></string>
+	<string name="msg_fixed_action"><![CDATA[
+		<b>Battd service fix done.</b><br />
+		<br />
+		You need to either <b>reboot</b> your device or <b>restart</b> the battd service for changes to take effect.
+	]]></string>
+	<string name="msg_rebooting">Rebooting…</string>
+	<string name="msg_restarting">Restarting battd…</string>
+	<string name="msg_fixing">Starting battd fix</string>
+	<string name="msg_autoreboot">Performing auto-reboot…</string>
 	<string name="msg_fixed">Battd fixed.</string>
-	<string name="reboot_yes">Yes</string>
-	<string name="reboot_no">No</string>
+	<string name="dialog_reboot">Reboot</string>
+	<string name="dialog_restart">Restart</string>
+	<string name="dialog_cancel">Cancel</string>
+	<string name="msg_restart_done">Battd restart done.</string>
 	<string name="err_calibrate">Error running battery fix!\n(%s)</string>
 	<string name="err_fix">Error fixing battd!\n(%s)</string>
 	<string name="err_reboot">Error rebooting device!\n(%s)</string>
@@ -26,6 +40,7 @@
 	<string name="err_start">Cannot start monitoring service!\n(%s)</string>
 	<string name="err_stop">Cannot stop monitoring service!\n(%s)</string>
 	<string name="err_shell">system shell not found</string>
+	<string name="err_restart">Error restarting battd!\n(%s)</string>
 	<string name="batt_title">Battery monitor</string>
 	<string name="batt_source">Power source</string>
 	<string name="batt_source_battery">Battery</string>
@@ -44,7 +59,11 @@
 	<string name="batt_shown">Percentage shown</string>
 	<string name="menu_licence">Licence</string>
 	<string name="menu_about">About</string>
+	<string name="menu_settings">Settings</string>
 	<string name="menu_exit">Exit</string>
+	<string name="prefs_title">Settings</string>
+	<string name="pref_section_general">General</string>
+	<string name="pref_showNotifications">Show notifications</string>
 	<string name="no_show_about">Don\'t show at startup</string>
 	<string name="text_about"><![CDATA[
 		<big><b>Atrix Battery Fix</b></big><br />

@@ -22,12 +22,6 @@ public class MyUtils {
 	static private String su = null;
 	static private String sh = null;
 
-	static public final String
-		PREF_AUTOFIX = "enabled",
-		PREF_AUTOREBOOT = "autoReboot",
-		PREF_NOTIFICATIONS = "notifications",
-		PREF_SHOWABOUT = "showAbout"
-	;
 	static protected final String[] suCandidates = {
 		"/system/xbin/su",
 		"/system/sbin/su",
@@ -145,36 +139,56 @@ public class MyUtils {
 		return runShellLike(su, dir, cmd);
 	}
 
-	static public String suRunScript(Context ctx, String dir, int scriptId) throws Exception {
+	static public String extractScript(Context ctx, int scriptId) throws Exception {
 		String script = ctx.getResources().getResourceEntryName(scriptId);
 		File f = ctx.getFileStreamPath(script);
-		if (!f.exists()) {
-			try {
-				InputStream raw = ctx.getResources().openRawResource(scriptId);
-				BufferedReader is = new BufferedReader(new InputStreamReader(raw, "UTF-8"));
-				BufferedWriter os = new BufferedWriter(new OutputStreamWriter(ctx.openFileOutput(script, Context.MODE_PRIVATE), "UTF-8"));
-				while (is.ready()) {
-					String line = is.readLine();
-					os.write(line + "\n");
-				}
-				is.close();
-				os.close();
+		if (f.exists()) {
+			return f.getAbsolutePath();
+		}
+		try {
+			InputStream raw = ctx.getResources().openRawResource(scriptId);
+			BufferedReader is = new BufferedReader(new InputStreamReader(raw, "UTF-8"));
+			BufferedWriter os = new BufferedWriter(new OutputStreamWriter(ctx.openFileOutput(script, Context.MODE_PRIVATE), "UTF-8"));
+			while (is.ready()) {
+				String line = is.readLine();
+				os.write(line + "\n");
 			}
-			catch (Exception ex) {
-				String msg = ex.getMessage();
-				if (msg == null || msg.equals("")) {
-					msg = "datadir not found or invalid, please reinstall app";
-				}
-				throw new Exception(msg);
+			is.close();
+			os.close();
+		}
+		catch (Exception ex) {
+			String msg = ex.getMessage();
+			if (msg == null || msg.equals("")) {
+				msg = "datadir not found or invalid, please reinstall app";
 			}
+			throw new Exception(msg);
+		}
+		return f.getAbsolutePath();
+	}
+
+	static public String shRunScript(Context ctx, String dir, int scriptId) throws Exception {
+		String script = extractScript(ctx, scriptId);
+		if (script == null) {
+			return null;
 		}
 		if (sh == null) {
 			sh = shFind();
 		}
-		return suRun(dir, sh + " '" + f.getAbsolutePath() + "'");
+		return shRun(dir, sh + " '" + script + "'");
 	}
 
-	static public boolean canReboot() {
+	static public String suRunScript(Context ctx, String dir, int scriptId) throws Exception {
+		String script = extractScript(ctx, scriptId);
+		if (script == null) {
+			return null;
+		}
+		if (sh == null) {
+			sh = shFind();
+		}
+		return suRun(dir, sh + " '" + script + "'");
+	}
+
+	static public boolean canSysReboot() {
 		if (reboot == null) {
 			Method m[] = PowerManager.class.getDeclaredMethods();
 			for (int i = 0; reboot == null && i < m.length; i++) {
@@ -187,7 +201,7 @@ public class MyUtils {
 	}
 
 	static public void rebootApi(Context ctx, String reason) throws Exception {
-		if (!canReboot()) {
+		if (!canSysReboot()) {
 			throw new Exception("Reboot not supported");
 		}
 		PowerManager pm = (PowerManager)ctx.getSystemService(Context.POWER_SERVICE);

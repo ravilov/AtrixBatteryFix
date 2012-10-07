@@ -45,7 +45,7 @@ public class MonitorService extends Service {
 			th = new Thread(new Runnable() {
 				private BroadcastReceiver br;
 
-				private void reboot() {
+				private void action() {
 					try {
 						if (BatteryFix.autoFix) {
 							try {
@@ -53,7 +53,13 @@ public class MonitorService extends Service {
 							}
 							catch (Exception ex) { }
 						}
-						BatteryFix.reboot();
+						if (BatteryFix.autoAction) {
+							if (BatteryFix.autoActionReboot) {
+								BatteryFix.reboot();
+							} else if (BatteryFix.autoActionRestart) {
+								BatteryFix.restartBattd();
+							}
+						}
 					}
 					catch (Exception ex) {
 						try {
@@ -72,7 +78,7 @@ public class MonitorService extends Service {
 						public void onReceive(Context c, Intent i) {
 							BatteryInfo.refresh(i);
 							if (BatteryInfo.isOnPower && BatteryInfo.isFull) {
-								reboot();
+								action();
 							}
 						}
 					};

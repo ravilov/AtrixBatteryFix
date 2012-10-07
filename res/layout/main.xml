@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent">
 	<CheckBox android:id="@+id/autoFix" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/autoFix" />
-	<CheckBox android:id="@+id/autoReboot" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/autoReboot" />
-	<CheckBox android:id="@+id/notifications" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/notifications" />
+	<CheckBox android:id="@+id/autoAction" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/autoAction" />
+	<RadioGroup android:layout_width="fill_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="40dip">
+		<RadioButton android:id="@+id/autoActionReboot" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/autoActionReboot" />
+		<RadioButton android:id="@+id/autoActionRestart" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/autoActionRestart"/>
+	</RadioGroup>
 	<LinearLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="5dip">
 		<Button android:id="@+id/buttonForce" android:layout_width="fill_parent" android:layout_height="fill_parent" android:text="@string/force" android:layout_weight="1" />
 		<Button android:id="@+id/buttonFix" android:layout_width="fill_parent" android:layout_height="fill_parent" android:text="@string/fix" android:layout_weight="1" />
