@@ -141,7 +141,7 @@ public class BatteryFix {
 	}
 
 	static public void loadPrefs() {
-		autoFix = prefs.getBoolean(PREF_AUTOFIX, true);
+		autoFix = prefs.getBoolean(PREF_AUTOFIX, false);
 		showNotifications = prefs.getBoolean(PREF_NOTIFICATIONS, true);
 		if (prefs.getBoolean(PREF_AUTOREBOOT, false)) {
 			autoAction = true;

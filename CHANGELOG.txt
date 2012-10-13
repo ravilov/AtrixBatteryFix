@@ -1,3 +1,9 @@
+0.21
+	- disabled deleting the batterystats.bin file
+	- changed defaults, now it will not run the fix by default when
+	  power detected
+
+
 0.20
 	- added an option to restart the battd service instead of a full reboot
 	- moved some options to a separate settings screen

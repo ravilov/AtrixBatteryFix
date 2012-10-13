@@ -16,9 +16,10 @@ do
 done
 
 #-- delete battery stats
-if (test -e /data/system/batterystats.bin)
-then
-	rm /data/system/batterystats.bin > /dev/null 2>&1 || :
-fi
+# DISABLED
+#if (test -e /data/system/batterystats.bin)
+#then
+#	rm /data/system/batterystats.bin > /dev/null 2>&1 || :
+#fi
 
 exit "${?}"
