@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">Battery Fix</string>
+	<string name="novalue">-</string>
 	<string name="autoFix">Auto-fix when power detected</string>
 	<string name="notifications">Show notifications</string>
 	<string name="autoAction">Auto-action when done charging</string>
