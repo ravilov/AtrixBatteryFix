@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="@string/pref_section_autoactions">
+		<CheckBoxPreference android:key="autofix_enabled" android:title="@string/pref_autofix" android:summary="@string/pref_autofix_" android:defaultValue="false" />
+		<ListPreference android:key="autoaction" android:title="@string/pref_autoaction" android:entries="@array/pref_autoaction_entries" android:entryValues="@array/pref_autoaction_values" android:defaultValue="none" />
+		<CheckBoxPreference android:key="nousbcharging" android:title="@string/pref_nousbcharging" android:summary="@string/pref_nousbcharging_" android:defaultValue="false" />
+	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_section_general">
-		<CheckBoxPreference android:key="notifications" android:title="@string/pref_showNotifications" android:defaultValue="true" />
+		<CheckBoxPreference android:key="notifications" android:title="@string/pref_notifications" android:defaultValue="true" />
+		<CheckBoxPreference android:key="battstats" android:title="@string/pref_battstats" android:summary="@string/pref_battstats_" android:defaultValue="false" />
 	</PreferenceCategory>
 </PreferenceScreen>

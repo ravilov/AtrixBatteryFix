@@ -8,10 +8,13 @@
 	<string name="autoActionRestart">Restart the battd service</string>
 	<string name="force">Run the fix</string>
 	<string name="fix">Fix battd</string>
+	<string name="charging_on">Charging enabled</string>
+	<string name="charging_off">Charging disabled</string>
+	<string name="nocharging">Charging control not available</string>
 	<string name="msg_calibrate">Starting battery fix</string>
 	<string name="msg_autocalibrate">Power detected, starting battery fix</string>
-	<string name="msg_start">Monitoring service started</string>
-	<string name="msg_stop">Monitoring service stopped</string>
+	<string name="msg_start">Battery monitoring started</string>
+	<string name="msg_stop">Battery monitoring stopped</string>
 	<string name="msg_done">Battery fix done! Will reboot when the battery is done changing.</string>
 	<string name="msg_done_reminder">Battery fix done! Remember to reboot for changes to take effect.</string>
 	<string name="msg_done_action"><![CDATA[
@@ -62,8 +65,19 @@
 	<string name="menu_settings">Settings</string>
 	<string name="menu_exit">Exit</string>
 	<string name="prefs_title">Settings</string>
+	<string name="pref_section_autoactions">Automatic actions</string>
+	<string name="pref_autofix">Fix on power detected</string>
+	<string name="pref_autofix_">Run the fix when power detected</string>
+	<string name="pref_autoaction">Action when charged</string>
+	<string name="pref_autoaction_none">Do nothing</string>
+	<string name="pref_autoaction_reboot">Reboot the device</string>
+	<string name="pref_autoaction_restart">Restart battd service</string>
 	<string name="pref_section_general">General</string>
-	<string name="pref_showNotifications">Show notifications</string>
+	<string name="pref_notifications">Show notifications</string>
+	<string name="pref_battstats">Force calibrate on fix</string>
+	<string name="pref_battstats_">Delete batterystats.bin when fixing</string>
+	<string name="pref_nousbcharging">Disable USB charging</string>
+	<string name="pref_nousbcharging_">Attempt to disable charging on USB</string>
 	<string name="no_show_about">Don\'t show at startup</string>
 	<string name="text_about"><![CDATA[
 		<big><b>Atrix Battery Fix</b></big><br />
@@ -71,8 +85,11 @@
 		Copyright &copy; by <a href="http://forum.xda-developers.com/member.php?u=2315905">ravilov</a> &lt;<a href="mailto:ravilov@linux.hr?subject=AtrixBatteryFix">ravilov@linux.hr</a>&gt;
 		<p>
 		This app helps fix the common &quot;<i>battery won\'t charge beyond xx%%</i>&quot; bug that seems to affect most Motorola Atrix phones.
-		In addition, it deletes the <tt>batterystats.bin</tt> file, thus forcing battery recalibration. It also attempts to fix ownership and permissions of the <tt>battd</tt> daemon and its data and config files.<br />
+		It can also delete the <tt>batterystats.bin</tt> file, thus forcing battery recalibration, and attempt to fix ownership and permissions of the <tt>battd</tt> daemon and its data and config files.<br />
 		See <a href="http://forum.xda-developers.com/showthread.php?t=1832470">http://forum.xda-developers.com/showthread.php?t=1832470</a> for more info.
+		</p>
+		<p>
+		In addition, it can enable/disable charging, and also be set up to automatically disable charging when an USB connection is detected.
 		</p>
 		<p>
 		<b><font color="#FFFF00">If you find this app useful, feel free to <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=ravilov@gmail.com&amp;item_name=AtrixBatteryFix+-+Donation&amp;no_shipping=1">make a donation</a>.</font></b><br />

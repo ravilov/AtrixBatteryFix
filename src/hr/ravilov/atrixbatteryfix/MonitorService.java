@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.widget.Toast;
+import hr.ravilov.atrixbatteryfix.Settings;
 import hr.ravilov.atrixbatteryfix.BatteryInfo;
 
 public class MonitorService extends Service {
@@ -37,7 +38,9 @@ public class MonitorService extends Service {
 
 	protected void start() {
 		try {
-			BatteryInfo.init(this);
+			MyUtils.init(this);
+			BatteryInfo.init();
+			Settings.init();
 			thTerminate = false;
 			if (th != null) {
 				stop();
@@ -47,18 +50,26 @@ public class MonitorService extends Service {
 
 				private void action() {
 					try {
-						if (BatteryFix.autoFix) {
+						MyUtils.init(MonitorService.this);
+						Settings.init();
+						if (Settings.autoFix) {
 							try {
 								BatteryFix.recalibrate();
 							}
 							catch (Exception ex) { }
 						}
-						if (BatteryFix.autoAction) {
-							if (BatteryFix.autoActionReboot) {
-								BatteryFix.reboot();
-							} else if (BatteryFix.autoActionRestart) {
-								BatteryFix.restartBattd();
-							}
+						switch (Settings.autoAction) {
+							case REBOOT: {
+									BatteryFix.reboot();
+								}
+								break;
+							case RESTART: {
+									BatteryFix.restartBattd();
+								}
+								break;
+							case NONE:
+							default:
+								break;
 						}
 					}
 					catch (Exception ex) {
@@ -77,7 +88,7 @@ public class MonitorService extends Service {
 						@Override
 						public void onReceive(Context c, Intent i) {
 							BatteryInfo.refresh(i);
-							if (BatteryInfo.isOnPower && BatteryInfo.isFull) {
+							if (BatteryInfo.isOnPower && (BatteryInfo.isFull || BatteryInfo.seemsFull)) {
 								action();
 							}
 						}
@@ -103,7 +114,7 @@ public class MonitorService extends Service {
 			});
 			th.setDaemon(true);
 			th.start();
-			if (BatteryFix.showNotifications) {
+			if (Settings.showNotifications) {
 				BatteryFix.showNotification(getString(R.string.msg_start));
 			}
 		}
@@ -120,7 +131,9 @@ public class MonitorService extends Service {
 			thTerminate = true;
 			th.interrupt();
 			th.join();
-			if (BatteryFix.showNotifications) {
+			MyUtils.init(this);
+			Settings.init();
+			if (Settings.showNotifications) {
 				BatteryFix.showNotification(getString(R.string.msg_stop));
 			}
 		}

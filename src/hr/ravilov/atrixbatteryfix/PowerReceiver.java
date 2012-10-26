@@ -3,9 +3,7 @@ package hr.ravilov.atrixbatteryfix;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Looper;
 import hr.ravilov.atrixbatteryfix.BatteryFix;
-import hr.ravilov.atrixbatteryfix.BatteryInfo;
 
 public class PowerReceiver extends BroadcastReceiver {
 	@Override
@@ -17,24 +15,11 @@ public class PowerReceiver extends BroadcastReceiver {
 					Thread.sleep(350);
 				}
 				catch (Exception ex) { }
-				BatteryFix.init(ctx, true);
-				BatteryInfo.init(ctx);
-				if (!BatteryInfo.isOnPower || BatteryInfo.isDischarging) {
-					BatteryFix.monCondStop();
-					return;
-				}
-				Looper.prepare();
-				if (BatteryFix.autoFix) {
-					BatteryFix.run();
-				}
-				BatteryInfo.refresh();
-				if (BatteryFix.autoAction && !BatteryInfo.isFull) {
-					BatteryFix.monCondStart();
-				} else {
-					BatteryFix.monCondStop();
-				}
-				Looper.loop();
-				Looper.myLooper().quit();
+				MyUtils.init(ctx);
+				Settings.init();
+				BatteryInfo.init();
+				BatteryFix.init(true);
+				BatteryFix.checkPower(true);
 			}
 		});
 		th.setDaemon(true);

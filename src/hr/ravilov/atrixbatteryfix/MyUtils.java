@@ -18,9 +18,11 @@ import android.os.PowerManager;
 import android.util.Log;
 
 public class MyUtils {
+	static private Context context = null;
 	static private Method reboot = null;
 	static private String su = null;
 	static private String sh = null;
+	static public String defaultTag = null;
 
 	static protected final String[] suCandidates = {
 		"/system/xbin/su",
@@ -34,6 +36,31 @@ public class MyUtils {
 		"ash",
 	};
 
+	static public enum Debug {
+		UNKNOWN,
+		NO,
+		YES
+	};
+	static public Debug debug = Debug.UNKNOWN;
+
+	static public void init(Context ctx) {
+		context = ctx;
+	}
+
+	static public Context getContext() {
+		try {
+			Context base = getBaseContext();
+			Context c = base.getApplicationContext();
+			return (c == null) ? base : c;
+		}
+		catch (Exception ex) { }
+		return null;
+	}
+
+	static public Context getBaseContext() {
+		return context;
+	}
+
 	static public String getStackTrace(Exception ex) {
 		ByteArrayOutputStream s = new ByteArrayOutputStream();
 		PrintWriter pw = new PrintWriter(s);
@@ -46,17 +73,17 @@ public class MyUtils {
 		return MyUtils.class.getPackage().getName() + "." + action;
 	}
 
-	static public void broadcast(Context ctx, String action) {
-		if (ctx == null) {
+	static public void broadcast(String action) {
+		if (context == null) {
 			return;
 		}
 		Intent i = new Intent(getFullAction(action));
-		ctx.sendBroadcast(i);
+		context.sendBroadcast(i);
 	}
 
-	static public String getMyVersion(Context ctx) {
+	static public String getMyVersion() {
 		try {
-			PackageInfo pkg = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
+			PackageInfo pkg = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
 			return pkg.versionName;
 		}
 		catch (Exception ex) { }
@@ -91,7 +118,7 @@ public class MyUtils {
 					cmds.append(cmd[i]);
 				}
 			}
-			Log.v("<exec>", String.format("Running [%s] using [%s]", cmds.toString(), shell));
+			log("<exec>", String.format("Running [%s] using [%s]", cmds.toString(), shell));
 		}
 		catch (Exception ex) { }
 		Process p = (dir == null) ? Runtime.getRuntime().exec(shell) : Runtime.getRuntime().exec(shell, null, new File(dir));
@@ -139,16 +166,16 @@ public class MyUtils {
 		return runShellLike(su, dir, cmd);
 	}
 
-	static public String extractScript(Context ctx, int scriptId) throws Exception {
-		String script = ctx.getResources().getResourceEntryName(scriptId);
-		File f = ctx.getFileStreamPath(script);
+	static public String extractScript(int scriptId) throws Exception {
+		String script = context.getResources().getResourceEntryName(scriptId);
+		File f = context.getFileStreamPath(script);
 		if (f.exists()) {
 			return f.getAbsolutePath();
 		}
 		try {
-			InputStream raw = ctx.getResources().openRawResource(scriptId);
+			InputStream raw = context.getResources().openRawResource(scriptId);
 			BufferedReader is = new BufferedReader(new InputStreamReader(raw, "UTF-8"));
-			BufferedWriter os = new BufferedWriter(new OutputStreamWriter(ctx.openFileOutput(script, Context.MODE_PRIVATE), "UTF-8"));
+			BufferedWriter os = new BufferedWriter(new OutputStreamWriter(context.openFileOutput(script, Context.MODE_PRIVATE), "UTF-8"));
 			while (is.ready()) {
 				String line = is.readLine();
 				os.write(line + "\n");
@@ -166,8 +193,8 @@ public class MyUtils {
 		return f.getAbsolutePath();
 	}
 
-	static public String shRunScript(Context ctx, String dir, int scriptId) throws Exception {
-		String script = extractScript(ctx, scriptId);
+	static public String shRunScript(String dir, int scriptId) throws Exception {
+		String script = extractScript(scriptId);
 		if (script == null) {
 			return null;
 		}
@@ -177,8 +204,8 @@ public class MyUtils {
 		return shRun(dir, sh + " '" + script + "'");
 	}
 
-	static public String suRunScript(Context ctx, String dir, int scriptId) throws Exception {
-		String script = extractScript(ctx, scriptId);
+	static public String suRunScript(String dir, int scriptId) throws Exception {
+		String script = extractScript(scriptId);
 		if (script == null) {
 			return null;
 		}
@@ -200,11 +227,11 @@ public class MyUtils {
 		return (reboot == null) ? false : true;
 	}
 
-	static public void rebootApi(Context ctx, String reason) throws Exception {
+	static public void rebootApi(String reason) throws Exception {
 		if (!canSysReboot()) {
 			throw new Exception("Reboot not supported");
 		}
-		PowerManager pm = (PowerManager)ctx.getSystemService(Context.POWER_SERVICE);
+		PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
 		reboot.invoke(pm, (Object)null);
 	}
 
@@ -263,5 +290,42 @@ public class MyUtils {
 		}
 		// default - system shell
 		return pathFind("sh");
+	}
+
+	static protected void getDebug() {
+		if (debug != Debug.UNKNOWN) {
+			return;
+		}
+		Integer v = context.getResources().getInteger(R.integer.debug);
+		debug = (v == 0) ? Debug.NO : Debug.YES;
+	}
+
+	static public void log(String tag, String msg) {
+		getDebug();
+		if (debug != Debug.YES) {
+			return;
+		}
+		Log.v(tag, msg);
+	}
+
+	static public void log(String msg) {
+		getDebug();
+		if (debug != Debug.YES) {
+			return;
+		}
+		if (defaultTag == null) {
+			try {
+				PackageInfo pkg = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+				String name = pkg.applicationInfo.name;
+				if (name == null) {
+					name = context.getText(pkg.applicationInfo.labelRes).toString();
+				}
+				defaultTag = String.format("<%s>", name);
+			}
+			catch (Exception ex) {
+				defaultTag = "<applog>";
+			}
+		}
+		log(defaultTag, msg);
 	}
 }

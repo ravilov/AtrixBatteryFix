@@ -1,3 +1,13 @@
+0.30
+	- re-added deleting batterystats.bin as an option (off by default)
+	- moved all preferences to the settings screen
+	- added an option to turn charging on or off, and also an option
+	  to automatically turn charging off when USB power detected
+	- added some heuristics to determine when the battery is done
+	  charging, hopefully it works
+	- general code cleanup
+
+
 0.21
 	- disabled deleting the batterystats.bin file
 	- changed defaults, now it will not run the fix by default when

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array name="pref_autoaction_entries">
+		<item>@string/pref_autoaction_none</item>
+		<item>@string/pref_autoaction_reboot</item>
+		<item>@string/pref_autoaction_restart</item>
+	</string-array>
+	<string-array name="pref_autoaction_values">
+		<item>none</item>
+		<item>reboot</item>
+		<item>restart</item>
+	</string-array>
+</resources>

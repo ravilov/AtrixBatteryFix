@@ -3,13 +3,13 @@ package hr.ravilov.atrixbatteryfix;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
-import android.util.Log;
 
 public class BatteryInfo {
+	final private static long MAX_TIME = 30 * 60 * 1000;	// in ms - 30 minutes
+
 	static private final String dir = "/sys/class/power_supply/battery";
 	static public boolean isOnAC = false;
 	static public boolean isOnUSB = false;
@@ -17,6 +17,7 @@ public class BatteryInfo {
 	static public boolean isCharging = false;
 	static public boolean isDischarging = false;
 	static public boolean isFull = false;
+	static public boolean seemsFull = false;
 	static public String battActual;
 	static public String battShown;
 	static public String battHealth;
@@ -24,24 +25,19 @@ public class BatteryInfo {
 	static public String battTemp;
 	static private int state;
 	static private int plugged;
-	static private Context ctx;
+	static private String lastVoltage = null;
+	static private long lastTime = -1;
 
-	static public void init(Context c) {
-		init(c, null);
+	static public void init() {
+		init(null);
 	}
 
-	static public void init(Context c, Intent i) {
-		ctx = c;
+	static public void init(Intent i) {
 		if (i == null) {
 			refresh();
 		} else {
 			refresh(i);
 		}
-	}
-
-	static protected Context getContext() {
-		Context c = ctx.getApplicationContext();
-		return (c == null) ? ctx : c;
 	}
 
 	static private String getFile(String filename) {
@@ -65,7 +61,7 @@ public class BatteryInfo {
 		battVoltage = getFile("voltage_now");
 		battTemp = getFile("temp");
 		if (i == null) {
-			i = getContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+			i = MyUtils.getContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 		}
 		plugged = i.getIntExtra("plugged", -1);
 		isOnAC = (plugged == BatteryManager.BATTERY_PLUGGED_AC) ? true : false;
@@ -84,6 +80,22 @@ public class BatteryInfo {
 				}
 			}
 		}
+		// heuristics for detecting if battery is done charging
+		// if the voltage does not change within MAX_TIME milliseconds, the battery is considered charged
+		seemsFull = isFull ? true : false;
+		if (isOnPower && !isFull && battVoltage != null) {
+			if (lastVoltage == null || lastTime <= 0 || !lastVoltage.equals(battVoltage)) {
+				lastVoltage = battVoltage;
+				lastTime = System.currentTimeMillis();
+			} else {
+				seemsFull = (System.currentTimeMillis() - lastTime >= MAX_TIME) ? true : false;
+			}
+		} else {
+			lastVoltage = null;
+			lastTime = -1;
+			return;
+		}
+		log();
 	}
 
 	static public void refresh() {
@@ -98,8 +110,7 @@ public class BatteryInfo {
 	}
 
 	static public void log(String tag) {
-		// disabled for "production"
-		Log.v(tag, String.format("health=[%s] voltage=[%s] temp=[%s] actual=[%s] shown=[%s] -- plugged=[%d] state=[%d] -- onAc=[%s] onUsb=[%s] isCharging=[%s] isDischarging=[%s] isFull=[%s]",
+		MyUtils.log(tag, String.format("health=[%s] voltage=[%s] temp=[%s] actual=[%s] shown=[%s] -- plugged=[%d] state=[%d] -- onAc=[%s] onUsb=[%s] isCharging=[%s] isDischarging=[%s] isFull=[%s] seemsFull=[%s] -- lastVoltage=[%s] lastTime=[%d]",
 			getValue(battHealth),
 			getValue(battVoltage),
 			getValue(battTemp),
@@ -111,7 +122,10 @@ public class BatteryInfo {
 			isOnUSB ? "YES" : "NO",
 			isCharging ? "YES" : "NO",
 			isDischarging ? "YES" : "NO",
-			isFull ? "YES" : "NO"
+			isFull ? "YES" : "NO",
+			seemsFull ? "YES" : "NO",
+			lastVoltage,
+			lastTime
 		));
 	}
 

@@ -16,58 +16,55 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 import hr.ravilov.atrixbatteryfix.MyUtils;
 import hr.ravilov.atrixbatteryfix.MyDialog;
+import hr.ravilov.atrixbatteryfix.Settings;
 import hr.ravilov.atrixbatteryfix.BatteryFix;
 import hr.ravilov.atrixbatteryfix.BatteryInfo;
 import hr.ravilov.atrixbatteryfix.R;
 
-public class MainActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class MainActivity extends Activity implements View.OnClickListener {
 	private static final int REFRESH = 1000;	// 1 second
-	private CheckBox autofix;
-	private CheckBox autoAction;
-	private RadioButton autoActionReboot;
-	private RadioButton autoActionRestart;
 	private Button force;
 	private Button fix;
+	private ToggleButton charging;
 	private TextView battSource;
 	private TextView battState;
 	private TextView battVoltage;
 	private TextView battTemp;
 	private TextView battActual;
 	private TextView battShown;
+	private Thread updater;
+	private volatile boolean updTerminate;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		BatteryFix.init(this, false);
-		BatteryInfo.init(this);
-		autofix = (CheckBox)findViewById(R.id.autoFix);
-		autoAction = (CheckBox)findViewById(R.id.autoAction);
-		autoActionReboot = (RadioButton)findViewById(R.id.autoActionReboot);
-		autoActionRestart = (RadioButton)findViewById(R.id.autoActionRestart);
+		MyUtils.init(this);
+		Settings.init();
+		BatteryInfo.init();
+		BatteryFix.init(false);
 		force = (Button)findViewById(R.id.buttonForce);
 		fix = (Button)findViewById(R.id.buttonFix);
+		charging = (ToggleButton)findViewById(R.id.buttonCharging);
 		battState = (TextView)findViewById(R.id.batt_state);
 		battSource = (TextView)findViewById(R.id.batt_source);
 		battVoltage = (TextView)findViewById(R.id.batt_voltage);
 		battTemp = (TextView)findViewById(R.id.batt_temp);
 		battShown = (TextView)findViewById(R.id.batt_shown);
 		battActual = (TextView)findViewById(R.id.batt_actual);
-		getPrefs();
-		autofix.setOnCheckedChangeListener(this);
-		autoAction.setOnCheckedChangeListener(this);
-		autoActionReboot.setOnCheckedChangeListener(this);
-		autoActionRestart.setOnCheckedChangeListener(this);
 		force.setOnClickListener(this);
 		fix.setOnClickListener(this);
-		Thread th = new Thread(new Runnable() {
+		charging.setOnClickListener(this);
+		charging.setEnabled(false);
+		updTerminate = false;
+		updater = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while (true) {
+				while (!updTerminate) {
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
@@ -81,18 +78,34 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 				}
 			}
 		});
-		th.setDaemon(false);
-		th.start();
-		if (BatteryFix.showAbout) {
+		updater.setDaemon(false);
+		updater.start();
+		if (Settings.showAbout) {
 			showAboutDialog(true);
 		}
 	}
 
 	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		try {
+			if (updater != null) {
+				synchronized (this) {
+					updTerminate = true;
+				}
+				updater.interrupt();
+				updater.join();
+			}
+		}
+		catch (Exception ex) { }
+	}
+
+	@Override
 	public void onResume() {
 		super.onResume();
-		BatteryFix.loadPrefs();
-		getPrefs();
+		Settings.load();
+		BatteryInfo.refresh();
+		BatteryFix.checkPower(false);
 	}
 
 	@Override
@@ -106,31 +119,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 		super.onConfigurationChanged(cfg);
 	}
 
-	private void getPrefs() {
-		autofix.setChecked(BatteryFix.autoFix ? true : false);
-		autoAction.setChecked(BatteryFix.autoAction ? true : false);
-		autoActionReboot.setChecked(BatteryFix.autoActionReboot ? true : false);
-		autoActionRestart.setChecked(BatteryFix.autoActionRestart ? true : false);
-		autoActionReboot.setEnabled(BatteryFix.autoAction ? true : false);
-		autoActionRestart.setEnabled(BatteryFix.autoAction ? true : false);
-	}
-
-	private void setPrefs() {
-		BatteryFix.autoFix = autofix.isChecked() ? true : false;
-		BatteryFix.autoAction = autoAction.isChecked() ? true : false;
-		BatteryFix.autoActionReboot = autoActionReboot.isChecked() ? true : false;
-		BatteryFix.autoActionRestart = autoActionRestart.isChecked() ? true : false;
-	}
-
-	private void savePrefs() {
-		setPrefs();
-		BatteryFix.savePrefs();
-	}
-
 	private void showAboutDialog(boolean firstTime) {
 		MyDialog d = new MyDialog(this);
 		d.setTitle(getText(R.string.menu_about).toString());
-		d.setContents(String.format(getText(R.string.text_about).toString(), MyUtils.getMyVersion(this)));
+		d.setContents(String.format(getText(R.string.text_about).toString(), MyUtils.getMyVersion()));
 		if (firstTime) {
 			final CheckBox show = new CheckBox(this);
 			show.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -139,8 +131,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 			show.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					BatteryFix.showAbout = isChecked ? false : true;
-					BatteryFix.savePrefs();
+					Settings.load();
+					Settings.showAbout = isChecked ? false : true;
+					Settings.save();
 				}
 			});
 			d.getBottomView().setVisibility(View.VISIBLE);
@@ -148,8 +141,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 			d.setOnClose(new MyDialog.OnCloseListener() {
 				@Override
 				public void run() {
-					BatteryFix.showAbout = show.isChecked() ? false : true;
-					BatteryFix.savePrefs();
+					Settings.load();
+					Settings.showAbout = show.isChecked() ? false : true;
+					Settings.save();
 				}
 			});
 		}
@@ -160,14 +154,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.menu_exit: {
-					savePrefs();
 					this.finish();
 				}
 				break;
 			case R.id.menu_licence: {
 					MyDialog d = new MyDialog(this);
 					d.setTitle(getText(R.string.menu_licence).toString());
-					d.setContents(String.format(getText(R.string.text_licence).toString(), MyUtils.getMyVersion(this)));
+					d.setContents(String.format(getText(R.string.text_licence).toString(), MyUtils.getMyVersion()));
 					d.show();
 				}
 				break;
@@ -194,19 +187,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 					fixBattd();
 				}
 				break;
-		}
-	}
-
-	@Override
-	public void onCheckedChanged(CompoundButton btn, boolean value) {
-		savePrefs();
-		BatteryInfo.refresh();
-		autoActionReboot.setEnabled(BatteryFix.autoAction ? true : false);
-		autoActionRestart.setEnabled(BatteryFix.autoAction ? true : false);
-		if (BatteryInfo.isOnPower && !BatteryInfo.isFull && BatteryFix.autoAction) {
-			BatteryFix.monCondStart();
-		} else {
-			BatteryFix.monCondStop();
+			case R.id.buttonCharging: {
+					charging.setChecked(charging.isChecked() ? false : true);
+					if (BatteryFix.canCharging()) {
+						BatteryFix.setCharging(BatteryFix.getCharging() ? false : true);
+					}
+				}
+				break;
 		}
 	}
 
@@ -241,16 +228,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 	}
 
 	private void forceCalibrate() {
-		savePrefs();
-		BatteryFix.init(this, false);
 		if (BatteryFix.run()) {
 			actionDialog(getText(R.string.msg_done_action).toString());
 		}
 	}
 
 	protected void fixBattd() {
-		savePrefs();
-		BatteryFix.init(this, false);
 		if (BatteryFix.fix()) {
 			actionDialog(getText(R.string.msg_fixed_action).toString());
 		}
@@ -301,6 +284,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Comp
 			} else {
 				battShown.setText("-");
 			}
+		}
+		if (BatteryFix.canCharging()) {
+			charging.setEnabled(true);
+			boolean ch = BatteryFix.getCharging();
+			charging.setText(ch ? R.string.charging_on : R.string.charging_off);
+			charging.setChecked(ch ? true : false);
+		} else {
+			charging.setEnabled(false);
+			charging.setText(R.string.nocharging);
 		}
 	}
 }
