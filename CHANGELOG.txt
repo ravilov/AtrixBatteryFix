@@ -5,7 +5,7 @@
 	  to automatically turn charging off when USB power detected
 	- added some heuristics to determine when the battery is done
 	  charging, hopefully it works
-	- general code cleanup
+	- bugfixes, general code cleanup
 
 
 0.21
