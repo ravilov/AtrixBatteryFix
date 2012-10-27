@@ -38,6 +38,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private TextView battShown;
 	private Thread updater;
 	private volatile boolean updTerminate;
+	private static boolean justStarted = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		Settings.init();
 		BatteryInfo.init();
 		BatteryFix.init(false);
+		justStarted = true;
 		force = (Button)findViewById(R.id.buttonForce);
 		fix = (Button)findViewById(R.id.buttonFix);
 		charging = (ToggleButton)findViewById(R.id.buttonCharging);
@@ -103,9 +105,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	@Override
 	public void onResume() {
 		super.onResume();
-		Settings.load();
-		BatteryInfo.refresh();
-		BatteryFix.checkPower(false);
+		if (!justStarted) {
+			Settings.load();
+			BatteryInfo.refresh();
+			BatteryFix.checkPower(false);
+		}
+		justStarted = false;
 	}
 
 	@Override
@@ -288,7 +293,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		if (BatteryFix.canCharging()) {
 			charging.setEnabled(true);
 			boolean ch = BatteryFix.getCharging();
-			charging.setText(ch ? R.string.charging_on : R.string.charging_off);
 			charging.setChecked(ch ? true : false);
 		} else {
 			charging.setEnabled(false);

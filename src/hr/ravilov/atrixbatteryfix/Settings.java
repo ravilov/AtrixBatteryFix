@@ -1,7 +1,6 @@
 package hr.ravilov.atrixbatteryfix;
 
 import java.util.HashMap;
-import java.util.Map;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -16,7 +15,7 @@ public class Settings extends PreferenceActivity {
 		PREF_ABOUT = "about",
 		PREF_NOTIFICATIONS = "notifications",
 		PREF_BATTSTATS = "battstats",
-		PREF_AUTOFIX = "enabled",
+		PREF_AUTOFIX = "autofix",
 		PREF_AUTOACTION = "autoaction",
 		PREF_NOUSBCHARGING = "nousbcharging"
 	;
@@ -125,8 +124,7 @@ public class Settings extends PreferenceActivity {
 			PREF_AUTOACTION,
 			PREF_NOUSBCHARGING,
 		};
-		Map<String, ?> entries = prefs.getAll();
-		for (String key : entries.keySet()) {
+		for (String key : prefs.getAll().keySet()) {
 			boolean found = false;
 			for (int i = 0; !found && i < list.length; i++) {
 				if (key.equals(list[i])) {
@@ -143,13 +141,16 @@ public class Settings extends PreferenceActivity {
 
 	public static void upgradeProps() {
 		try {
+			if (prefs.contains("enabled")) {
+				autoFix = prefs.getBoolean("enabled", autoFix);
+			}
 			if (prefs.contains("showNotifications")) {
 				showNotifications = prefs.getBoolean("showNotifications", showNotifications);
 			}
-			// TODO
-
+			// ... TODO
 		}
 		catch (Exception ex) { }
+		save();
 	}
 
 	public static void load() {

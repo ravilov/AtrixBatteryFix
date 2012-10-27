@@ -11,12 +11,12 @@
 	<string name="charging_on">Charging enabled</string>
 	<string name="charging_off">Charging disabled</string>
 	<string name="nocharging">Charging control not available</string>
-	<string name="msg_calibrate">Starting battery fix</string>
-	<string name="msg_autocalibrate">Power detected, starting battery fix</string>
+	<string name="msg_fix">Starting battery fix</string>
+	<string name="msg_autofix">Power detected, starting battery fix</string>
 	<string name="msg_start">Battery monitoring started</string>
 	<string name="msg_stop">Battery monitoring stopped</string>
-	<string name="msg_done">Battery fix done! Will reboot when the battery is done changing.</string>
-	<string name="msg_done_reminder">Battery fix done! Remember to reboot for changes to take effect.</string>
+	<string name="msg_done">Battery fix done!</string>
+	<string name="msg_done_reminder">Battery fix done!\nRemember to reboot for changes to take effect.</string>
 	<string name="msg_done_action"><![CDATA[
 		<b>Battery fix done.</b><br />
 		<br />
@@ -32,18 +32,25 @@
 	<string name="msg_fixing">Starting battd fix</string>
 	<string name="msg_autoreboot">Performing auto-reboot…</string>
 	<string name="msg_fixed">Battd fixed.</string>
+	<string name="msg_usb_disabled">USB detected, charging disabled</string>
+	<string name="msg_usb_enabled">Charging re-enabled</string>
 	<string name="dialog_reboot">Reboot</string>
 	<string name="dialog_restart">Restart</string>
 	<string name="dialog_cancel">Cancel</string>
 	<string name="msg_restart_done">Battd restart done.</string>
-	<string name="err_calibrate">Error running battery fix!\n(%s)</string>
-	<string name="err_fix">Error fixing battd!\n(%s)</string>
+	<string name="err_fix">Error running battery fix!\n(%s)</string>
+	<string name="err_fix_short">Error running battery fix</string>
+	<string name="err_battd">Error fixing battd!\n(%s)</string>
+	<string name="err_battd_short">Error fixing battd</string>
 	<string name="err_reboot">Error rebooting device!\n(%s)</string>
+	<string name="err_reboot_short">Error rebooting device</string>
 	<string name="err_autoreboot">Error performing auto-reboot!</string>
 	<string name="err_start">Cannot start monitoring service!\n(%s)</string>
 	<string name="err_stop">Cannot stop monitoring service!\n(%s)</string>
 	<string name="err_shell">system shell not found</string>
 	<string name="err_restart">Error restarting battd!\n(%s)</string>
+	<string name="err_restart_short">Error restarting battd</string>
+	<string name="err_charging">Error configuring charging!\n(%s)</string>
 	<string name="batt_title">Battery monitor</string>
 	<string name="batt_source">Power source</string>
 	<string name="batt_source_battery">Battery</string>

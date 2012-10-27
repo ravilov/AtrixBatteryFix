@@ -49,35 +49,27 @@ public class MonitorService extends Service {
 				private BroadcastReceiver br;
 
 				private void action() {
-					try {
-						MyUtils.init(MonitorService.this);
-						Settings.init();
-						if (Settings.autoFix) {
-							try {
-								BatteryFix.recalibrate();
-							}
-							catch (Exception ex) { }
-						}
-						switch (Settings.autoAction) {
-							case REBOOT: {
-									BatteryFix.reboot();
-								}
-								break;
-							case RESTART: {
-									BatteryFix.restartBattd();
-								}
-								break;
-							case NONE:
-							default:
-								break;
-						}
-					}
-					catch (Exception ex) {
+					MyUtils.init(MonitorService.this);
+					Settings.init();
+					BatteryFix.init(true);
+					if (Settings.autoFix) {
 						try {
-							BatteryFix.showNotification(getText(R.string.msg_autoreboot).toString());
+							BatteryFix.recalibrate();
 						}
-						catch (Exception ex1) { }
-						BatteryFix.reboot();
+						catch (Exception ex) { }
+					}
+					switch (Settings.autoAction) {
+						case REBOOT: {
+								BatteryFix.reboot();
+							}
+							break;
+						case RESTART: {
+								BatteryFix.restartBattd();
+							}
+							break;
+						case NONE:
+						default:
+							break;
 					}
 				}
 
@@ -108,6 +100,7 @@ public class MonitorService extends Service {
 							Thread.sleep(60 * 1000);
 						}
 						catch (Exception ex) { }
+						BatteryInfo.refresh();
 					}
 					delFilter();
 				}
@@ -128,7 +121,9 @@ public class MonitorService extends Service {
 			return;
 		}
 		try {
-			thTerminate = true;
+			synchronized (this) {
+				thTerminate = true;
+			}
 			th.interrupt();
 			th.join();
 			MyUtils.init(this);

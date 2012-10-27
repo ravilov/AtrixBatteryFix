@@ -22,6 +22,7 @@ public class MyUtils {
 	static private Method reboot = null;
 	static private String su = null;
 	static private String sh = null;
+	static private String bb = null;
 	static public String defaultTag = null;
 
 	static protected final String[] suCandidates = {
@@ -29,7 +30,14 @@ public class MyUtils {
 		"/system/sbin/su",
 		"/system/bin/su",
 		"/sbin/su",
+		"/data/local/sbin/su",
 		"/data/local/bin/su",
+	};
+	static protected final String[] shCandidates = {
+		"/system/xbin/bash",
+		"/system/bin/sh",
+		"/bin/sh",
+		"/sbin/sh",
 	};
 	static protected final String[] bbShCandidates = {
 		"sh",
@@ -90,21 +98,6 @@ public class MyUtils {
 		return null;
 	}
 
-	static public String suFind() {
-		String fnd = pathFind("su");
-		if (fnd != null && !fnd.equals("")) {
-			return fnd;
-		}
-		for (int i = 0; i < suCandidates.length; i++) {
-			File f = new File(suCandidates[i]);
-			if (f.exists()) {
-				return suCandidates[i];
-			}
-		}
-		// default fallback
-		return "su";
-	}
-
 	static public String runShellLike(String shell, String dir, String... cmd) throws Exception {
 		if (shell == null || shell.equals("")) {
 			throw new Exception("shell not defined");
@@ -147,9 +140,7 @@ public class MyUtils {
 	}
 
 	static public String shRun(String dir, String... cmd) throws Exception {
-		if (sh == null) {
-			sh = shFind();
-		}
+		String sh = shFind();
 		if (sh.equals("")) {
 			throw new Exception("shell not found");
 		}
@@ -157,9 +148,7 @@ public class MyUtils {
 	}
 
 	static public String suRun(String dir, String... cmd) throws Exception {
-		if (su == null) {
-			su = suFind();
-		}
+		String su = suFind();
 		if (su.equals("")) {
 			throw new Exception("su binary not found");
 		}
@@ -198,10 +187,7 @@ public class MyUtils {
 		if (script == null) {
 			return null;
 		}
-		if (sh == null) {
-			sh = shFind();
-		}
-		return shRun(dir, sh + " '" + script + "'");
+		return shRun(dir, shFind() + " '" + script + "'");
 	}
 
 	static public String suRunScript(String dir, int scriptId) throws Exception {
@@ -209,10 +195,7 @@ public class MyUtils {
 		if (script == null) {
 			return null;
 		}
-		if (sh == null) {
-			sh = shFind();
-		}
-		return suRun(dir, sh + " '" + script + "'");
+		return suRun(dir, shFind() + " '" + script + "'");
 	}
 
 	static public boolean canSysReboot() {
@@ -270,10 +253,17 @@ public class MyUtils {
 	}
 
 	static public String busyboxFind() {
-		return pathFind("busybox");
+		if (bb != null) {
+			return bb;
+		}
+		bb = pathFind("busybox");
+		return bb;
 	}
 
 	static public String shFind() {
+		if (sh != null) {
+			return sh;
+		}
 		String bb = busyboxFind();
 		if (bb != null) {
 			for (int i = 0; i < bbShCandidates.length; i++) {
@@ -283,13 +273,54 @@ public class MyUtils {
 					if (res != null && !res.equals("")) {
 						throw new Exception(res);
 					}
-					return bbsh;
+					sh = bbsh;
 				}
 				catch (Exception ex) { }
+				if (sh != null) {
+					break;
+				}
 			}
 		}
-		// default - system shell
-		return pathFind("sh");
+		if (sh == null) {
+			for (int i = 0; i < shCandidates.length; i++) {
+				File f = new File(shCandidates[i]);
+				if (f.exists()) {
+					sh = f.getAbsolutePath();
+				}
+				if (sh != null) {
+					break;
+				}
+			}
+		}
+		if (sh == null) {
+			// default - system shell
+			sh = pathFind("sh");
+		}
+		return sh;
+	}
+
+	static public String suFind() {
+		if (su != null) {
+			return su;
+		}
+		String fnd = pathFind("su");
+		if (fnd != null && !fnd.equals("")) {
+			return fnd;
+		}
+		for (int i = 0; i < suCandidates.length; i++) {
+			File f = new File(suCandidates[i]);
+			if (f.exists()) {
+				su = f.getAbsolutePath();
+			}
+			if (su != null) {
+				break;
+			}
+		}
+		if (su == null) {
+			// default fallback
+			su = "su";
+		}
+		return su;
 	}
 
 	static protected void getDebug() {
