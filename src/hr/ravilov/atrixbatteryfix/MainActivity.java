@@ -38,7 +38,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private TextView battShown;
 	private Thread updater;
 	private volatile boolean updTerminate;
-	private static boolean justStarted = false;
+	private boolean justStarted = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -82,7 +82,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		});
 		updater.setDaemon(false);
 		updater.start();
-		if (Settings.showAbout) {
+		if (Settings.prefAbout()) {
 			showAboutDialog(true);
 		}
 	}
@@ -106,9 +106,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onResume() {
 		super.onResume();
 		if (!justStarted) {
+			Settings.PrefList p = Settings.backup();
 			Settings.load();
-			BatteryInfo.refresh();
-			BatteryFix.checkPower(false);
+			if (Settings.equals(p, Settings.backup())) {
+				BatteryInfo.refresh();
+				BatteryFix.checkPower(false);
+			}
 		}
 		justStarted = false;
 	}
@@ -137,7 +140,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 					Settings.load();
-					Settings.showAbout = isChecked ? false : true;
+					Settings.prefAbout(isChecked ? false : true);
 					Settings.save();
 				}
 			});
@@ -147,7 +150,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 				@Override
 				public void run() {
 					Settings.load();
-					Settings.showAbout = show.isChecked() ? false : true;
+					Settings.prefAbout(show.isChecked() ? false : true);
 					Settings.save();
 				}
 			});
@@ -185,7 +188,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onClick(View src) {
 		switch (src.getId()) {
 			case R.id.buttonForce: {
-					forceCalibrate();
+					forceFix();
 				}
 				break;
 			case R.id.buttonFix: {
@@ -214,12 +217,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 					BatteryFix.reboot();
 				}
 			})
-			.setNegativeButton(getText(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int id) {
-					dialog.cancel();
-				}
-			})
 			.setNeutralButton(getText(R.string.dialog_restart), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
@@ -227,12 +224,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
 					BatteryFix.restartBattd();
 				}
 			})
+			.setNegativeButton(getText(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int id) {
+					dialog.cancel();
+				}
+			})
 			.create()
 			.show()
 		;
 	}
 
-	private void forceCalibrate() {
+	private void forceFix() {
 		if (BatteryFix.run()) {
 			actionDialog(getText(R.string.msg_done_action).toString());
 		}

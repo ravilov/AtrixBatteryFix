@@ -54,7 +54,7 @@ public class BatteryFix {
 			if (pd != null) {
 				return;
 			}
-			pd = ProgressDialog.show(MyUtils.getContext(), "", (msg_progress == null) ? "" : msg_progress, true, false);
+			pd = ProgressDialog.show(MyUtils.getBaseContext(), "", (msg_progress == null) ? "" : msg_progress, true, false);
 			pd.setCancelable(false);
 		}
 
@@ -70,7 +70,7 @@ public class BatteryFix {
 			if (msg_success == null) {
 				return;
 			}
-			Toast.makeText(MyUtils.getContext(), msg_success, Toast.LENGTH_SHORT).show();
+			Toast.makeText(MyUtils.getBaseContext(), msg_success, Toast.LENGTH_SHORT).show();
 		}
 
 		public void error() {
@@ -80,26 +80,40 @@ public class BatteryFix {
 			if (msg_error == null) {
 				return;
 			}
-			Toast.makeText(MyUtils.getContext(), String.format(msg_error, ex.getMessage()), Toast.LENGTH_LONG).show();
+			Toast.makeText(MyUtils.getBaseContext(), String.format(msg_error, ex.getMessage()), Toast.LENGTH_LONG).show();
 		}
 
 		public void run() {
-			show();
+			final Activity act = (Activity)MyUtils.getBaseContext();
+			act.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					show();
+				}
+			});
 			try {
 				Thread th = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						Looper.prepare();
+						ex = null;
 						try {
 							onRun();
 						}
 						catch (Exception ex2) {
 							ex = ex2;
-							hide();
-							error();
 						}
-						hide();
-						success();
+						act.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								hide();
+								if (ex == null) {
+									success();
+								} else {
+									error();
+								}
+							}
+						});
 						Looper.loop();
 						Looper.myLooper().quit();
 					}
@@ -139,13 +153,13 @@ public class BatteryFix {
 
 	static public boolean run() {
 		try {
-			if (Settings.showNotifications) {
+			if (Settings.prefNotifications()) {
 				int msgId = triggered ? R.string.msg_autofix : R.string.msg_fix;
 				showNotification(MyUtils.getContext().getText(msgId).toString());
 			}
-			recalibrate();
-			if (triggered && Settings.showNotifications) {
-				int msgId = (Settings.autoAction != Settings.AutoAction.NONE) ? R.string.msg_done : R.string.msg_done_reminder;
+			fixBattery();
+			if (triggered && Settings.prefNotifications()) {
+				int msgId = (Settings.prefAutoAction() != Settings.AutoAction.NONE) ? R.string.msg_done : R.string.msg_done_reminder;
 				Toast.makeText(MyUtils.getContext(), MyUtils.getContext().getText(msgId).toString(), Toast.LENGTH_LONG).show();
 			}
 		}
@@ -162,11 +176,11 @@ public class BatteryFix {
 
 	static public boolean fix() {
 		try {
-			if (Settings.showNotifications) {
+			if (Settings.prefNotifications()) {
 				showNotification(MyUtils.getContext().getText(R.string.msg_fixing).toString());
 			}
 			fixBattd();
-			if (Settings.showNotifications) {
+			if (Settings.prefNotifications()) {
 				Toast.makeText(MyUtils.getContext(), MyUtils.getContext().getText(R.string.msg_fixed).toString(), Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -196,7 +210,7 @@ public class BatteryFix {
 		nm.cancel(id);
 	}
 
-	static public void recalibrate() throws Exception {
+	static public void fixBattery() throws Exception {
 		if (MyUtils.shFind() == null) {
 			throw new Exception(MyUtils.getContext().getText(R.string.err_shell).toString());
 		}
@@ -224,7 +238,7 @@ public class BatteryFix {
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
-		if (Settings.battstats) {
+		if (Settings.prefBattStats()) {
 			res = MyUtils.suRunScript(null, R.raw.del_battstats);
 			if (!res.equals("")) {
 				throw new Exception(res);
@@ -249,14 +263,14 @@ public class BatteryFix {
 
 	static public void restartBattd() {
 		if (triggered) {
-			if (Settings.showNotifications) {
+			if (Settings.prefNotifications()) {
 				showNotification(MyUtils.getContext().getText(R.string.msg_restarting).toString());
 			}
 			try {
 				_restartAction();
 			}
 			catch (Exception ex) {
-				if (Settings.showNotifications) {
+				if (Settings.prefNotifications()) {
 					showNotification(MyUtils.getContext().getText(R.string.err_restart_short).toString());
 				}
 			}
@@ -287,14 +301,14 @@ public class BatteryFix {
 		}
 		catch (Exception ex) {
 			if (triggered) {
-				if (Settings.showNotifications) {
+				if (Settings.prefNotifications()) {
 					showNotification(MyUtils.getContext().getText(R.string.msg_autoreboot).toString());
 				}
 				try {
 					_rebootAction();
 				}
 				catch (Exception ex2) {
-					if (Settings.showNotifications) {
+					if (Settings.prefNotifications()) {
 						showNotification(MyUtils.getContext().getText(R.string.err_reboot_short).toString());
 					}
 				}
@@ -425,22 +439,22 @@ public class BatteryFix {
 		if (isThread) {
 			Looper.prepare();
 		}
-		if (Settings.autoFix) {
+		if (Settings.prefAutoFix()) {
 			run();
 		}
-		if (Settings.noUsbCharging && BatteryFix.canCharging()) {
+		if (Settings.prefNoUsbCharging() && BatteryFix.canCharging()) {
 			try {
 				if (BatteryInfo.isCharging && BatteryInfo.isOnUSB) {
 					if (BatteryFix.getCharging()) {
 						setCharging(false);
-						if (Settings.showNotifications) {
+						if (Settings.prefNotifications()) {
 							showNotification(MyUtils.getContext().getText(R.string.msg_usb_disabled).toString());
 						}
 					}
 				} else {
 					if (!BatteryFix.getCharging()) {
 						setCharging(true);
-						if (Settings.showNotifications) {
+						if (Settings.prefNotifications()) {
 							showNotification(MyUtils.getContext().getText(R.string.msg_usb_enabled).toString());
 						}
 					}
@@ -450,7 +464,7 @@ public class BatteryFix {
 				showError(R.string.err_charging, ex);
 			}
 		}
-		if (Settings.autoAction != Settings.AutoAction.NONE && !(BatteryInfo.isFull || BatteryInfo.seemsFull)) {
+		if (Settings.prefAutoAction() != Settings.AutoAction.NONE && !(BatteryInfo.isFull || BatteryInfo.seemsFull)) {
 			BatteryFix.monCondStart();
 		} else {
 			BatteryFix.monCondStop();

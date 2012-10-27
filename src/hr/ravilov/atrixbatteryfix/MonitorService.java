@@ -52,13 +52,13 @@ public class MonitorService extends Service {
 					MyUtils.init(MonitorService.this);
 					Settings.init();
 					BatteryFix.init(true);
-					if (Settings.autoFix) {
+					if (Settings.prefAutoFix()) {
 						try {
-							BatteryFix.recalibrate();
+							BatteryFix.fixBattery();
 						}
 						catch (Exception ex) { }
 					}
-					switch (Settings.autoAction) {
+					switch (Settings.prefAutoAction()) {
 						case REBOOT: {
 								BatteryFix.reboot();
 							}
@@ -107,7 +107,7 @@ public class MonitorService extends Service {
 			});
 			th.setDaemon(true);
 			th.start();
-			if (Settings.showNotifications) {
+			if (Settings.prefNotifications()) {
 				BatteryFix.showNotification(getString(R.string.msg_start));
 			}
 		}
@@ -128,7 +128,7 @@ public class MonitorService extends Service {
 			th.join();
 			MyUtils.init(this);
 			Settings.init();
-			if (Settings.showNotifications) {
+			if (Settings.prefNotifications()) {
 				BatteryFix.showNotification(getString(R.string.msg_stop));
 			}
 		}
