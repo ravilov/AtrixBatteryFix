@@ -47,13 +47,15 @@ public class MonitorService extends Service {
 			}
 			th = new Thread(new Runnable() {
 				private BroadcastReceiver br;
-				private boolean actionDone = false;
+				private volatile boolean actionDone = false;
 
 				private void action() {
 					if (actionDone) {
 						return;
 					}
-					actionDone = true;
+					synchronized (this) {
+						actionDone = true;
+					}
 					MyUtils.init(MonitorService.this);
 					Settings.init();
 					BatteryFix.init(true);
@@ -99,7 +101,9 @@ public class MonitorService extends Service {
 
 				@Override
 				public void run() {
-					actionDone = false;
+					synchronized (this) {
+						actionDone = false;
+					}
 					addFilter();
 					while (BatteryInfo.isOnPower && !MonitorService.this.thTerminate) {
 						try {
