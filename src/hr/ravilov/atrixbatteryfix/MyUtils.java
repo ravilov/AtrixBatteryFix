@@ -327,6 +327,9 @@ public class MyUtils {
 		if (debug != Debug.UNKNOWN) {
 			return;
 		}
+		if (context == null) {
+			return;
+		}
 		Integer v = context.getResources().getInteger(R.integer.debug);
 		debug = (v == 0) ? Debug.NO : Debug.YES;
 	}
@@ -336,7 +339,7 @@ public class MyUtils {
 		if (debug != Debug.YES) {
 			return;
 		}
-		Log.v(tag, msg);
+		Log.d(tag, msg);
 	}
 
 	static public void log(String msg) {

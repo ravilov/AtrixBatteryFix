@@ -106,11 +106,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onResume() {
 		super.onResume();
 		if (!justStarted) {
+			boolean oldUsb = Settings.prefNoUsbCharging();
 			Settings.PrefList p = Settings.backup();
 			Settings.load();
-			if (Settings.equals(p, Settings.backup())) {
+			if (!Settings.equals(p, Settings.backup())) {
 				BatteryInfo.refresh();
-				BatteryFix.checkPower(false);
+				BatteryFix.checkPower();
+				if (oldUsb && !Settings.prefNoUsbCharging()) {
+					BatteryFix.setUsbCharging(true);
+				}
 			}
 		}
 		justStarted = false;
@@ -188,7 +192,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onClick(View src) {
 		switch (src.getId()) {
 			case R.id.buttonForce: {
-					forceFix();
+					fixBattery();
 				}
 				break;
 			case R.id.buttonFix: {
@@ -235,7 +239,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		;
 	}
 
-	private void forceFix() {
+	private void fixBattery() {
 		if (BatteryFix.run()) {
 			actionDialog(getText(R.string.msg_done_action).toString());
 		}
@@ -295,8 +299,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		}
 		if (BatteryFix.canCharging()) {
 			charging.setEnabled(true);
-			boolean ch = BatteryFix.getCharging();
-			charging.setChecked(ch ? true : false);
+			charging.setChecked(BatteryFix.getCharging() ? true : false);
 		} else {
 			charging.setEnabled(false);
 			charging.setText(R.string.nocharging);

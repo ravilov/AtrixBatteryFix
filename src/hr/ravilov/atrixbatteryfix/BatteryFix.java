@@ -429,49 +429,60 @@ public class BatteryFix {
 		}
 	}
 
-	static public void checkPower(boolean isThread) {
-		Settings.load();
-		BatteryInfo.refresh();
-		if (!BatteryInfo.isOnPower || BatteryInfo.isDischarging) {
-			BatteryFix.monCondStop();
-			return;
-		}
-		if (isThread) {
-			Looper.prepare();
-		}
-		if (Settings.prefAutoFix()) {
-			run();
-		}
-		if (Settings.prefNoUsbCharging() && BatteryFix.canCharging()) {
-			try {
-				if (BatteryInfo.isCharging && BatteryInfo.isOnUSB) {
-					if (BatteryFix.getCharging()) {
-						setCharging(false);
-						if (Settings.prefNotifications()) {
-							showNotification(MyUtils.getContext().getText(R.string.msg_usb_disabled).toString());
-						}
+	static public void setUsbCharging(boolean enabled) {
+		try {
+			if (enabled) {
+				if (!BatteryFix.getCharging()) {
+					setCharging(true);
+					if (Settings.prefNotifications()) {
+						showNotification(MyUtils.getContext().getText(R.string.msg_usb_enabled).toString());
 					}
-				} else {
-					if (!BatteryFix.getCharging()) {
-						setCharging(true);
-						if (Settings.prefNotifications()) {
-							showNotification(MyUtils.getContext().getText(R.string.msg_usb_enabled).toString());
-						}
+				}
+			} else {
+				if (BatteryFix.getCharging()) {
+					setCharging(false);
+					if (Settings.prefNotifications()) {
+						showNotification(MyUtils.getContext().getText(R.string.msg_usb_disabled).toString());
 					}
 				}
 			}
-			catch (Exception ex) {
-				showError(R.string.err_charging, ex);
+		}
+		catch (Exception ex) {
+			showError(R.string.err_charging, ex);
+		}
+	}
+
+	static public void checkPower() {
+		if (Settings.prefNoUsbCharging() && canCharging()) {
+			setUsbCharging(BatteryInfo.isOnUSB ? false : true);
+		}
+		boolean isCharging = (
+			BatteryInfo.isOnPower &&
+			!BatteryInfo.isDischarging &&
+			(
+				!BatteryInfo.isOnUSB ||
+				!Settings.prefNoUsbCharging() ||
+				!canCharging()
+			)
+		) ? true : false;
+		if (isCharging) {
+			if (Settings.prefAutoFix()) {
+				run();
 			}
-		}
-		if (Settings.prefAutoAction() != Settings.AutoAction.NONE && !(BatteryInfo.isFull || BatteryInfo.seemsFull)) {
-			BatteryFix.monCondStart();
+			if (!(BatteryInfo.isFull || BatteryInfo.seemsFull)) {
+				switch (Settings.prefAutoAction()) {
+					case REBOOT:
+					case RESTART:
+						monCondStart();
+						break;
+					case NONE:
+					default:
+						monCondStop();
+						break;
+				}
+			}
 		} else {
-			BatteryFix.monCondStop();
-		}
-		if (isThread) {
-			Looper.loop();
-			Looper.myLooper().quit();
+			monCondStop();
 		}
 	}
 }

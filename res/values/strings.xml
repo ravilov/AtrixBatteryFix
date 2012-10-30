@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">Battery Fix</string>
+	<string name="novalue">-</string>
 	<string name="autoFix">Auto-fix when power detected</string>
 	<string name="notifications">Show notifications</string>
 	<string name="autoAction">Auto-action when done charging</string>
@@ -10,7 +11,7 @@
 	<string name="fix">Fix battd</string>
 	<string name="charging_on">Charging enabled</string>
 	<string name="charging_off">Charging disabled</string>
-	<string name="nocharging">Charging control not available</string>
+	<string name="nocharging">Charging control unavailable</string>
 	<string name="msg_fix">Starting battery fix</string>
 	<string name="msg_autofix">Power detected, starting battery fix</string>
 	<string name="msg_start">Battery monitoring started</string>
@@ -33,7 +34,7 @@
 	<string name="msg_autoreboot">Performing auto-reboot…</string>
 	<string name="msg_fixed">Battd fixed.</string>
 	<string name="msg_usb_disabled">USB detected, charging disabled</string>
-	<string name="msg_usb_enabled">Charging re-enabled</string>
+	<string name="msg_usb_enabled">Charging enabled</string>
 	<string name="dialog_reboot">Reboot</string>
 	<string name="dialog_restart">Restart</string>
 	<string name="dialog_cancel">Cancel</string>
@@ -73,7 +74,7 @@
 	<string name="menu_exit">Exit</string>
 	<string name="prefs_title">Settings</string>
 	<string name="pref_section_autoactions">Automatic actions</string>
-	<string name="pref_autofix">Fix on power detected</string>
+	<string name="pref_autofix">Fix when power detected</string>
 	<string name="pref_autofix_">Run the fix when power detected</string>
 	<string name="pref_autoaction">Action when charged</string>
 	<string name="pref_autoaction_none">Do nothing</string>
@@ -81,7 +82,7 @@
 	<string name="pref_autoaction_restart">Restart battd service</string>
 	<string name="pref_section_general">General</string>
 	<string name="pref_notifications">Show notifications</string>
-	<string name="pref_battstats">Force calibrate on fix</string>
+	<string name="pref_battstats">Force calibration on fix</string>
 	<string name="pref_battstats_">Delete batterystats.bin when fixing</string>
 	<string name="pref_nousbcharging">Disable USB charging</string>
 	<string name="pref_nousbcharging_">Attempt to disable charging on USB</string>

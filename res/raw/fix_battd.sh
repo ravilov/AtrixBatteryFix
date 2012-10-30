@@ -1,5 +1,10 @@
 #! /system/bin/sh
 set -e > /dev/null 2>&1 || :
+if !(test -d /data/battd)
+then
+	echo "service data not found" >&2
+	exit 1
+fi
 battd_user="`
 	( ps 2>/dev/null || : ) | while read user pid ppid vsize rss wchan pc state name args
 	do
