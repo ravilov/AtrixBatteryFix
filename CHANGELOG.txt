@@ -1,4 +1,4 @@
-0.30
+0.30-beta1
 	- re-added deleting batterystats.bin as an option (off by default)
 	- moved all preferences to the settings screen
 	- added an option to turn charging on or off, and also an option
