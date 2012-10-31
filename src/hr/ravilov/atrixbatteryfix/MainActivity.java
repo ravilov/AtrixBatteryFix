@@ -106,6 +106,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onResume() {
 		super.onResume();
 		if (!justStarted) {
+			BatteryFix.init(false);
 			boolean oldUsb = Settings.prefNoUsbCharging();
 			Settings.PrefList p = Settings.backup();
 			Settings.load();

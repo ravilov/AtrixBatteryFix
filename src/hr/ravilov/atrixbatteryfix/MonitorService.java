@@ -113,7 +113,7 @@ public class MonitorService extends Service {
 						BatteryInfo.refresh();
 					}
 					delFilter();
-					if (BatteryInfo.isOnPower) {
+					if (BatteryInfo.isOnPower && actionDone) {
 						try {
 							Thread.sleep(5 * 1000);
 						}

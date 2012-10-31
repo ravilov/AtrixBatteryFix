@@ -93,11 +93,10 @@
 		Copyright &copy; by <a href="http://forum.xda-developers.com/member.php?u=2315905">ravilov</a> &lt;<a href="mailto:ravilov@linux.hr?subject=AtrixBatteryFix">ravilov@linux.hr</a>&gt;
 		<p>
 		This app helps fix the common &quot;<i>battery won\'t charge beyond xx%%</i>&quot; bug that seems to affect most Motorola Atrix phones.
-		It can also delete the <tt>batterystats.bin</tt> file, thus forcing battery recalibration, and attempt to fix ownership and permissions of the <tt>battd</tt> daemon and its data and config files.<br />
+		It also attempts to fix ownership and permissions of the "battd" daemon and its data and config files.
+		Optionally, it can also delete the "batterystats.bin" file, thus forcing battery recalibration.
+		In addition, it can enable/disable charging (on compatible kernels), and also be set up to automatically disable charging when an USB connection is detected.
 		See <a href="http://forum.xda-developers.com/showthread.php?t=1832470">http://forum.xda-developers.com/showthread.php?t=1832470</a> for more info.
-		</p>
-		<p>
-		In addition, it can enable/disable charging, and also be set up to automatically disable charging when an USB connection is detected.
 		</p>
 		<p>
 		<b><font color="#FFFF00">If you find this app useful, feel free to <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=ravilov@gmail.com&amp;item_name=AtrixBatteryFix+-+Donation&amp;no_shipping=1">make a donation</a>.</font></b><br />

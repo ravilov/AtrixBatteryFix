@@ -466,7 +466,7 @@ public class BatteryFix {
 			)
 		) ? true : false;
 		if (isCharging) {
-			if (Settings.prefAutoFix()) {
+			if (Settings.prefAutoFix() && triggered) {
 				run();
 			}
 			if (!(BatteryInfo.isFull || BatteryInfo.seemsFull)) {
