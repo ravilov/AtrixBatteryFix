@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Looper;
-import hr.ravilov.atrixbatteryfix.BatteryFix;
 
 public class PowerReceiver extends BroadcastReceiver {
 	@Override
@@ -12,15 +11,17 @@ public class PowerReceiver extends BroadcastReceiver {
 		Thread th = new Thread(new Runnable() {
 			public void run() {
 				try {
-					Thread.sleep(350);
+					//Thread.sleep(350);
+					long time = System.currentTimeMillis();
+					while (System.currentTimeMillis() < time + 350) {
+						Thread.yield();
+					}
 				}
 				catch (Exception ex) { }
 				Looper.prepare();
-				MyUtils.init(ctx);
-				Settings.init();
-				BatteryInfo.init();
-				BatteryFix.init(true);
-				BatteryFix.checkPower();
+				MyUtils utils = new MyUtils(ctx);
+				BatteryFix fix = new BatteryFix(utils, (new Settings()).init(utils), new BatteryInfo(utils), true);
+				fix.checkPower();
 				Looper.loop();
 				Looper.myLooper().quit();
 			}

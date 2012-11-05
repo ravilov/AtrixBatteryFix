@@ -3,8 +3,6 @@ package hr.ravilov.atrixbatteryfix;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,13 +16,6 @@ import android.os.PowerManager;
 import android.util.Log;
 
 public class MyUtils {
-	static private Context context = null;
-	static private Method reboot = null;
-	static private String su = null;
-	static private String sh = null;
-	static private String bb = null;
-	static public String defaultTag = null;
-
 	static protected final String[] suCandidates = {
 		"/system/xbin/su",
 		"/system/sbin/su",
@@ -51,11 +42,23 @@ public class MyUtils {
 	};
 	static public Debug debug = Debug.UNKNOWN;
 
-	static public void init(Context ctx) {
+	private Context context = null;
+	private Method reboot = null;
+	private String su = null;
+	private String sh = null;
+	private String bb = null;
+	public String defaultTag = null;
+
+	public MyUtils(Context ctx) {
 		context = ctx;
+		getDebug();
+		shFind();
+		busyboxFind();
+		suFind();
+		canSysReboot();
 	}
 
-	static public Context getContext() {
+	public Context getContext() {
 		try {
 			Context base = getBaseContext();
 			Context c = base.getApplicationContext();
@@ -65,7 +68,7 @@ public class MyUtils {
 		return null;
 	}
 
-	static public Context getBaseContext() {
+	public Context getBaseContext() {
 		return context;
 	}
 
@@ -81,7 +84,7 @@ public class MyUtils {
 		return MyUtils.class.getPackage().getName() + "." + action;
 	}
 
-	static public void broadcast(String action) {
+	public void broadcast(String action) {
 		if (context == null) {
 			return;
 		}
@@ -89,7 +92,7 @@ public class MyUtils {
 		context.sendBroadcast(i);
 	}
 
-	static public String getMyVersion() {
+	public String getMyVersion() {
 		try {
 			PackageInfo pkg = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
 			return pkg.versionName;
@@ -98,7 +101,7 @@ public class MyUtils {
 		return null;
 	}
 
-	static public String runShellLike(String shell, String dir, String... cmd) throws Exception {
+	public String runShellLike(String shell, String dir, String... cmd) throws Exception {
 		if (shell == null || shell.equals("")) {
 			throw new Exception("shell not defined");
 		}
@@ -114,32 +117,26 @@ public class MyUtils {
 			log("<exec>", String.format("Running [%s] using [%s]", cmds.toString(), shell));
 		}
 		catch (Exception ex) { }
-		Process p = (dir == null) ? Runtime.getRuntime().exec(shell) : Runtime.getRuntime().exec(shell, null, new File(dir));
-		DataOutputStream os = new DataOutputStream(p.getOutputStream());
-		DataInputStream is = new DataInputStream(p.getInputStream());
-		DataInputStream es = new DataInputStream(p.getErrorStream());
+		ShellInterface sh = new ShellInterface(this, shell, dir);
 		for (int i = 0; i < cmd.length; i++) {
 			if (cmd[i] != null && !cmd[i].equals("")) {
-				os.writeBytes(cmd[i] + "\n");
+				sh.sendCommand(cmd[i]);
 			}
 		}
-		os.flush();
-		os.close();
-		p.waitFor();
+		sh.finish();
 		String res = "";
-		while (es.available() > 0) {
-			res += es.readLine() + "\n";
+		while (sh.hasError()) {
+			res += sh.getError(false);
 		}
-		while (is.available() > 0) {
-			res += is.readLine() + "\n";
+		while (sh.hasOutput()) {
+			res += sh.getOutput(false);
 		}
-		is.close();
-		es.close();
-		res = res.replaceAll("(^[\\s\\r\\n]+|[\\s\\r\\n]+$)", "");
+		sh.close();
+		res = ShellInterface.trim(res);
 		return res;
 	}
 
-	static public String shRun(String dir, String... cmd) throws Exception {
+	public String shRun(String dir, String... cmd) throws Exception {
 		String sh = shFind();
 		if (sh.equals("")) {
 			throw new Exception("shell not found");
@@ -147,7 +144,7 @@ public class MyUtils {
 		return runShellLike(sh, dir, cmd);
 	}
 
-	static public String suRun(String dir, String... cmd) throws Exception {
+	public String suRun(String dir, String... cmd) throws Exception {
 		String su = suFind();
 		if (su.equals("")) {
 			throw new Exception("su binary not found");
@@ -155,7 +152,7 @@ public class MyUtils {
 		return runShellLike(su, dir, cmd);
 	}
 
-	static public String extractScript(int scriptId) throws Exception {
+	public String extractScript(int scriptId) throws Exception {
 		String script = context.getResources().getResourceEntryName(scriptId);
 		File f = context.getFileStreamPath(script);
 		if (f.exists()) {
@@ -182,7 +179,7 @@ public class MyUtils {
 		return f.getAbsolutePath();
 	}
 
-	static public String shRunScript(String dir, int scriptId) throws Exception {
+	public String shRunScript(String dir, int scriptId) throws Exception {
 		String script = extractScript(scriptId);
 		if (script == null) {
 			return null;
@@ -190,7 +187,7 @@ public class MyUtils {
 		return shRun(dir, shFind() + " '" + script + "'");
 	}
 
-	static public String suRunScript(String dir, int scriptId) throws Exception {
+	public String suRunScript(String dir, int scriptId) throws Exception {
 		String script = extractScript(scriptId);
 		if (script == null) {
 			return null;
@@ -198,7 +195,7 @@ public class MyUtils {
 		return suRun(dir, shFind() + " '" + script + "'");
 	}
 
-	static public boolean canSysReboot() {
+	public boolean canSysReboot() {
 		if (reboot == null) {
 			Method m[] = PowerManager.class.getDeclaredMethods();
 			for (int i = 0; reboot == null && i < m.length; i++) {
@@ -210,7 +207,7 @@ public class MyUtils {
 		return (reboot == null) ? false : true;
 	}
 
-	static public void rebootApi(String reason) throws Exception {
+	public void rebootApi(String reason) throws Exception {
 		if (!canSysReboot()) {
 			throw new Exception("Reboot not supported");
 		}
@@ -218,7 +215,7 @@ public class MyUtils {
 		reboot.invoke(pm, (Object)null);
 	}
 
-	static public void rebootCommand(String reason) throws Exception {
+	public void rebootCommand(String reason) throws Exception {
 		String cmd = "reboot";
 		if (reason != null && !reason.equals("")) {
 			cmd += " " + reason;
@@ -252,7 +249,7 @@ public class MyUtils {
 		return null;
 	}
 
-	static public String busyboxFind() {
+	public String busyboxFind() {
 		if (bb != null) {
 			return bb;
 		}
@@ -260,7 +257,7 @@ public class MyUtils {
 		return bb;
 	}
 
-	static public String shFind() {
+	public String shFind() {
 		if (sh != null) {
 			return sh;
 		}
@@ -299,7 +296,7 @@ public class MyUtils {
 		return sh;
 	}
 
-	static public String suFind() {
+	public String suFind() {
 		if (su != null) {
 			return su;
 		}
@@ -323,7 +320,7 @@ public class MyUtils {
 		return su;
 	}
 
-	static protected void getDebug() {
+	protected void getDebug() {
 		if (debug != Debug.UNKNOWN) {
 			return;
 		}
@@ -334,7 +331,7 @@ public class MyUtils {
 		debug = (v == 0) ? Debug.NO : Debug.YES;
 	}
 
-	static public void log(String tag, String msg) {
+	public void log(String tag, String msg) {
 		getDebug();
 		if (debug != Debug.YES) {
 			return;
@@ -342,7 +339,7 @@ public class MyUtils {
 		Log.d(tag, msg);
 	}
 
-	static public void log(String msg) {
+	public void log(String msg) {
 		getDebug();
 		if (debug != Debug.YES) {
 			return;

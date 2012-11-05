@@ -18,15 +18,9 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-import hr.ravilov.atrixbatteryfix.MyUtils;
-import hr.ravilov.atrixbatteryfix.MyDialog;
-import hr.ravilov.atrixbatteryfix.Settings;
-import hr.ravilov.atrixbatteryfix.BatteryFix;
-import hr.ravilov.atrixbatteryfix.BatteryInfo;
-import hr.ravilov.atrixbatteryfix.R;
 
 public class MainActivity extends Activity implements View.OnClickListener {
-	private static final int REFRESH = 1000;	// 1 second
+	private static final int REFRESH = 500;	// 1 second
 	private Button force;
 	private Button fix;
 	private ToggleButton charging;
@@ -39,15 +33,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private Thread updater;
 	private volatile boolean updTerminate;
 	private boolean justStarted = false;
+	private MyUtils utils;
+	private BatteryFix bfix;
+	private BatteryInfo info;
+	private Settings settings;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		MyUtils.init(this);
-		Settings.init();
-		BatteryInfo.init();
-		BatteryFix.init(false);
+		utils = new MyUtils(this);
+		settings = (new Settings()).init(utils);
+		info = new BatteryInfo(utils);
+		bfix = new BatteryFix(utils, settings, info, false);
+		bfix.setupChargingForUI();
 		justStarted = true;
 		force = (Button)findViewById(R.id.buttonForce);
 		fix = (Button)findViewById(R.id.buttonFix);
@@ -82,7 +81,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		});
 		updater.setDaemon(false);
 		updater.start();
-		if (Settings.prefAbout()) {
+		if (settings.prefAbout()) {
 			showAboutDialog(true);
 		}
 	}
@@ -90,6 +89,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		bfix.cleanupCharging();
 		try {
 			if (updater != null) {
 				synchronized (this) {
@@ -106,15 +106,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onResume() {
 		super.onResume();
 		if (!justStarted) {
-			BatteryFix.init(false);
-			boolean oldUsb = Settings.prefNoUsbCharging();
-			Settings.PrefList p = Settings.backup();
-			Settings.load();
-			if (!Settings.equals(p, Settings.backup())) {
-				BatteryInfo.refresh();
-				BatteryFix.checkPower();
-				if (oldUsb && !Settings.prefNoUsbCharging()) {
-					BatteryFix.setUsbCharging(true);
+			boolean oldUsb = settings.prefNoUsbCharging();
+			Settings.PrefList p = settings.backup();
+			settings.load();
+			if (!settings.equals(p, settings.backup())) {
+				info.refresh();
+				bfix.checkPower();
+				if (oldUsb && !settings.prefNoUsbCharging()) {
+					bfix.setUsbCharging(true);
 				}
 			}
 		}
@@ -135,7 +134,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private void showAboutDialog(boolean firstTime) {
 		MyDialog d = new MyDialog(this);
 		d.setTitle(getText(R.string.menu_about).toString());
-		d.setContents(String.format(getText(R.string.text_about).toString(), MyUtils.getMyVersion()));
+		d.setContents(String.format(getText(R.string.text_about).toString(), utils.getMyVersion()));
 		if (firstTime) {
 			final CheckBox show = new CheckBox(this);
 			show.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -144,9 +143,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 			show.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					Settings.load();
-					Settings.prefAbout(isChecked ? false : true);
-					Settings.save();
+					settings.load();
+					settings.prefAbout(isChecked ? false : true);
+					settings.save();
 				}
 			});
 			d.getBottomView().setVisibility(View.VISIBLE);
@@ -154,9 +153,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 			d.setOnClose(new MyDialog.OnCloseListener() {
 				@Override
 				public void run() {
-					Settings.load();
-					Settings.prefAbout(show.isChecked() ? false : true);
-					Settings.save();
+					settings.load();
+					settings.prefAbout(show.isChecked() ? false : true);
+					settings.save();
 				}
 			});
 		}
@@ -173,7 +172,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 			case R.id.menu_licence: {
 					MyDialog d = new MyDialog(this);
 					d.setTitle(getText(R.string.menu_licence).toString());
-					d.setContents(String.format(getText(R.string.text_licence).toString(), MyUtils.getMyVersion()));
+					d.setContents(String.format(getText(R.string.text_licence).toString(), utils.getMyVersion()));
 					d.show();
 				}
 				break;
@@ -202,8 +201,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
 				break;
 			case R.id.buttonCharging: {
 					charging.setChecked(charging.isChecked() ? false : true);
-					if (BatteryFix.canCharging()) {
-						BatteryFix.setCharging(BatteryFix.getCharging() ? false : true);
+					try {
+						if (bfix.canCharging()) {
+							bfix.setCharging(bfix.getCharging() ? false : true);
+						}
+					}
+					catch (Exception ex) {
+						bfix.showError(R.string.err_charging, ex);
 					}
 				}
 				break;
@@ -219,14 +223,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
 				@Override
 				public void onClick(DialogInterface dialog, int id) {
 					dialog.dismiss();
-					BatteryFix.reboot();
+					bfix.reboot();
 				}
 			})
 			.setNeutralButton(getText(R.string.dialog_restart), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
-					BatteryFix.restartBattd();
+					bfix.restartBattd();
 				}
 			})
 			.setNegativeButton(getText(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
@@ -241,66 +245,76 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	}
 
 	private void fixBattery() {
-		if (BatteryFix.run()) {
+		if (bfix.run()) {
 			actionDialog(getText(R.string.msg_done_action).toString());
 		}
 	}
 
 	protected void fixBattd() {
-		if (BatteryFix.fix()) {
+		if (bfix.fix()) {
 			actionDialog(getText(R.string.msg_fixed_action).toString());
 		}
 	}
 
 	protected void updateBatteryInfo() {
-		BatteryInfo.refresh();
-		if (BatteryInfo.isOnAC) {
+		info.refresh();
+		if (info.isOnAC) {
 			battSource.setText(getText(R.string.batt_source_ac));
-		} else if (BatteryInfo.isOnUSB) {
+		} else if (info.isOnUSB) {
 			battSource.setText(getText(R.string.batt_source_usb));
 		} else {
 			battSource.setText(getText(R.string.batt_source_battery));
 		}
-		if (BatteryInfo.isFull) {
-			if (BatteryInfo.isOnPower) {
+		if (info.isFull) {
+			if (info.isOnPower) {
 				battState.setText(getText(R.string.batt_state_full));
 			} else {
 				battState.setText(getText(R.string.batt_state_discharging));
 			}
-		} else if (BatteryInfo.isCharging) {
+		} else if (info.isCharging) {
 			battState.setText(getText(R.string.batt_state_charging));
-		} else if (BatteryInfo.isDischarging) {
+		} else if (info.isDischarging) {
 			battState.setText(getText(R.string.batt_state_discharging));
 		} else {
 			battState.setText(getText(R.string.batt_state_unknown));
 		}
-		if (BatteryInfo.battVoltage != null) {
-			battVoltage.setText(String.valueOf(Math.round(Float.valueOf(BatteryInfo.battVoltage) / 1000)) + " mV");
+		if (info.battVoltage != null) {
+			battVoltage.setText(String.valueOf(Math.round(Float.valueOf(info.battVoltage) / 1000)) + " mV");
 		} else {
 			battVoltage.setText("-");
 		}
-		if (BatteryInfo.battTemp != null) {
-			battTemp.setText(String.valueOf(Float.valueOf(BatteryInfo.battTemp) / 10) + " °C");
+		if (info.battTemp != null) {
+			battTemp.setText(String.valueOf(Float.valueOf(info.battTemp) / 10) + " °C");
 		} else {
 			battTemp.setText("-");
 		}
-		if (BatteryInfo.battActual != null) {
-			battActual.setText(String.valueOf(Integer.valueOf(BatteryInfo.battActual)) + "%");
+		if (info.battActual != null) {
+			battActual.setText(String.valueOf(Integer.valueOf(info.battActual)) + "%");
 		} else {
 			battActual.setText("-");
 		}
-		if (BatteryInfo.battShown != null) {
-			battShown.setText(String.valueOf(Integer.valueOf(BatteryInfo.battShown)) + "%");
+		if (info.battShown != null) {
+			battShown.setText(String.valueOf(Integer.valueOf(info.battShown)) + "%");
 		} else {
-			if (BatteryInfo.battActual != null) {
-				battShown.setText(String.valueOf(Integer.valueOf(BatteryInfo.battActual)) + "%");
+			if (info.battActual != null) {
+				battShown.setText(String.valueOf(Integer.valueOf(info.battActual)) + "%");
 			} else {
 				battShown.setText("-");
 			}
 		}
-		if (BatteryFix.canCharging()) {
+		boolean canCharging = false;
+		boolean isCharging = false;
+		try {
+			canCharging = bfix.canCharging() ? true : false;
+			isCharging = (canCharging && bfix.getCharging()) ? true : false;
+		}
+		catch (Exception ex) {
+			canCharging = false;
+			isCharging = false;
+		}
+		if (canCharging) {
 			charging.setEnabled(true);
-			charging.setChecked(BatteryFix.getCharging() ? true : false);
+			charging.setChecked(isCharging ? true : false);
 		} else {
 			charging.setEnabled(false);
 			charging.setText(R.string.nocharging);

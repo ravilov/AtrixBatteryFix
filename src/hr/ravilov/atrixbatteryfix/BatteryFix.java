@@ -3,169 +3,66 @@ package hr.ravilov.atrixbatteryfix;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.zip.CRC32;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Looper;
 import android.widget.Toast;
-import hr.ravilov.atrixbatteryfix.MyUtils;
-import hr.ravilov.atrixbatteryfix.Settings;
-import hr.ravilov.atrixbatteryfix.MonitorService;
-import hr.ravilov.atrixbatteryfix.R;
 
 public class BatteryFix {
 	static public final String CHARGING_FILE = "/sys/class/power_supply/battery/disable_charging";
-
-	static abstract class ProgressRunner {
-		public ProgressDialog pd = null;
-		public Exception ex = null;
-		private String msg_progress;
-		private String msg_success;
-		private String msg_error;
-
-		abstract public void onRun() throws Exception;
-
-		public ProgressRunner(String mProgress, String mSuccess, String mError) {
-			init(mProgress, mSuccess, mError);
-		}
-
-		public ProgressRunner(int mProgress, int mSuccess, int mError) {
-			init(
-				(mProgress > 0) ? MyUtils.getContext().getText(mProgress).toString() : null,
-				(mSuccess > 0) ? MyUtils.getContext().getText(mSuccess).toString() : null,
-				(mError > 0) ? MyUtils.getContext().getText(mError).toString() : null
-			);
-		}
-
-		private void init(String mProgress, String mSuccess, String mError) {
-			msg_progress = mProgress;
-			msg_success = mSuccess;
-			msg_error = mError;
-		}
-
-		public void show() {
-			if (pd != null) {
-				return;
-			}
-			pd = ProgressDialog.show(MyUtils.getBaseContext(), "", (msg_progress == null) ? "" : msg_progress, true, false);
-			pd.setCancelable(false);
-		}
-
-		public void hide() {
-			if (pd == null) {
-				return;
-			}
-			pd.dismiss();
-			pd = null;
-		}
-
-		public void success() {
-			if (msg_success == null) {
-				return;
-			}
-			Toast.makeText(MyUtils.getBaseContext(), msg_success, Toast.LENGTH_SHORT).show();
-		}
-
-		public void error() {
-			if (ex == null) {
-				return;
-			}
-			if (msg_error == null) {
-				return;
-			}
-			Toast.makeText(MyUtils.getBaseContext(), String.format(msg_error, ex.getMessage()), Toast.LENGTH_LONG).show();
-		}
-
-		public void run() {
-			final Activity act = (Activity)MyUtils.getBaseContext();
-			act.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					show();
-				}
-			});
-			try {
-				Thread th = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						Looper.prepare();
-						ex = null;
-						try {
-							onRun();
-						}
-						catch (Exception ex2) {
-							ex = ex2;
-						}
-						act.runOnUiThread(new Runnable() {
-							@Override
-							public void run() {
-								hide();
-								if (ex == null) {
-									success();
-								} else {
-									error();
-								}
-							}
-						});
-						Looper.loop();
-						Looper.myLooper().quit();
-					}
-				});
-				th.setDaemon(false);
-				th.start();
-			}
-			catch (Exception ex2) {
-				ex = ex2;
-				hide();
-				error();
-			}
-		}
-	}
 
 	static enum HasCharging {
 		UNKNOWN,
 		NO,
 		YES
 	};
-	static private boolean triggered;
-	static private NotificationManager nm;
-	static private HasCharging hasCharging = HasCharging.UNKNOWN;
+	private boolean triggered;
+	private NotificationManager nm;
+	private HasCharging hasCharging = HasCharging.UNKNOWN;
+	private ShellInterface shell = null;
+	private boolean siTried = false;
+	private MyUtils utils;
+	private BatteryInfo info;
+	private Settings settings;
 
-	static public void init(boolean trig) {
-		triggered = trig;
-		nm = (NotificationManager)MyUtils.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+	public BatteryFix(MyUtils u, Settings set, BatteryInfo bi, boolean trig) {
+		triggered = trig ? true : false;
+		utils = u;
+		settings = set;
+		info = bi;
+		nm = (NotificationManager)utils.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
 	}
 
-	static protected void showError(int msgId, Exception ex) {
+	protected void showError(int msgId, Exception ex) {
 		String msg = ex.getMessage();
 		if (msg == null || msg.equals("")) {
 			msg = ex.toString();
 		}
-		Toast.makeText(MyUtils.getContext(), String.format(MyUtils.getContext().getText(msgId).toString(), msg), Toast.LENGTH_LONG).show();
+		if (msg != null && !msg.equals("")) {
+			Toast.makeText(utils.getContext(), String.format(utils.getContext().getText(msgId).toString(), msg), Toast.LENGTH_LONG).show();
+		}
 	}
 
-	static public boolean run() {
+	public boolean run() {
 		try {
-			if (Settings.prefNotifications()) {
+			if (settings.prefNotifications()) {
 				int msgId = triggered ? R.string.msg_autofix : R.string.msg_fix;
-				showNotification(MyUtils.getContext().getText(msgId).toString());
+				showNotification(utils.getContext().getText(msgId).toString());
 			}
 			fixBattery();
-			if (triggered && Settings.prefNotifications()) {
-				int msgId = (Settings.prefAutoAction() != Settings.AutoAction.NONE) ? R.string.msg_done : R.string.msg_done_reminder;
-				Toast.makeText(MyUtils.getContext(), MyUtils.getContext().getText(msgId).toString(), Toast.LENGTH_LONG).show();
+			if (triggered && settings.prefNotifications()) {
+				int msgId = (settings.prefAutoAction() != Settings.AutoAction.NONE) ? R.string.msg_done : R.string.msg_done_reminder;
+				Toast.makeText(utils.getContext(), utils.getContext().getText(msgId).toString(), Toast.LENGTH_LONG).show();
 			}
 		}
 		catch (Exception ex) {
 			if (triggered) {
-				showNotification(MyUtils.getContext().getText(R.string.err_fix_short).toString());
+				showNotification(utils.getContext().getText(R.string.err_fix_short).toString());
 			} else {
 				showError(R.string.err_fix, ex);
 			}
@@ -174,19 +71,19 @@ public class BatteryFix {
 		return true;
 	}
 
-	static public boolean fix() {
+	public boolean fix() {
 		try {
-			if (Settings.prefNotifications()) {
-				showNotification(MyUtils.getContext().getText(R.string.msg_fixing).toString());
+			if (settings.prefNotifications()) {
+				showNotification(utils.getContext().getText(R.string.msg_fixing).toString());
 			}
 			fixBattd();
-			if (Settings.prefNotifications()) {
-				Toast.makeText(MyUtils.getContext(), MyUtils.getContext().getText(R.string.msg_fixed).toString(), Toast.LENGTH_SHORT).show();
+			if (settings.prefNotifications()) {
+				Toast.makeText(utils.getContext(), utils.getContext().getText(R.string.msg_fixed).toString(), Toast.LENGTH_SHORT).show();
 			}
 		}
 		catch (Exception ex) {
 			if (triggered) {
-				showNotification(MyUtils.getContext().getText(R.string.err_battd_short).toString());
+				showNotification(utils.getContext().getText(R.string.err_battd_short).toString());
 			} else {
 				showError(R.string.err_battd, ex);
 			}
@@ -195,7 +92,7 @@ public class BatteryFix {
 		return true;
 	}
 
-	static public void showNotification(String str) {
+	public void showNotification(String str) {
 		CRC32 gen = new CRC32();
 		gen.update(str.getBytes());
 		int id = (int)gen.getValue();
@@ -203,79 +100,79 @@ public class BatteryFix {
 		Notification ntf = new Notification(R.drawable.icon, str, System.currentTimeMillis());
 		ntf.flags |= Notification.FLAG_AUTO_CANCEL;
 		try {
-			ntf.setLatestEventInfo(MyUtils.getContext(), null, null, PendingIntent.getActivity(MyUtils.getContext(), 0, new Intent(), 0));
+			ntf.setLatestEventInfo(utils.getContext(), null, null, PendingIntent.getActivity(utils.getContext(), 0, new Intent(), 0));
 		}
 		catch (Exception ex) { }
 		nm.notify(id, ntf);
 		nm.cancel(id);
 	}
 
-	static public void fixBattery() throws Exception {
-		if (MyUtils.shFind() == null) {
-			throw new Exception(MyUtils.getContext().getText(R.string.err_shell).toString());
+	public void fixBattery() throws Exception {
+		if (utils.shFind() == null) {
+			throw new Exception(utils.getContext().getText(R.string.err_shell).toString());
 		}
 		// test run, to see if we can su at all
-		String res = MyUtils.suRun(null);
+		String res = utils.suRun(null);
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
-		res = MyUtils.suRunScript(null, R.raw.fix_battery);
+		res = utils.suRunScript(null, R.raw.fix_battery);
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
 	}
 
-	static public void fixBattd() throws Exception {
-		if (MyUtils.shFind() == null) {
-			throw new Exception(MyUtils.getContext().getText(R.string.err_shell).toString());
+	public void fixBattd() throws Exception {
+		if (utils.shFind() == null) {
+			throw new Exception(utils.getContext().getText(R.string.err_shell).toString());
 		}
 		// test run, to see if we can su at all
-		String res = MyUtils.suRun(null);
+		String res = utils.suRun(null);
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
-		res = MyUtils.suRunScript(null, R.raw.fix_battd);
+		res = utils.suRunScript(null, R.raw.fix_battd);
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
-		if (Settings.prefBattStats()) {
-			res = MyUtils.suRunScript(null, R.raw.del_battstats);
+		if (settings.prefBattStats()) {
+			res = utils.suRunScript(null, R.raw.del_battstats);
 			if (!res.equals("")) {
 				throw new Exception(res);
 			}
 		}
 	}
 
-	static private void _restartAction() throws Exception {
-		if (MyUtils.shFind() == null) {
-			throw new Exception(MyUtils.getContext().getText(R.string.err_shell).toString());
+	private void _restartAction() throws Exception {
+		if (utils.shFind() == null) {
+			throw new Exception(utils.getContext().getText(R.string.err_shell).toString());
 		}
 		// test run, to see if we can su at all
-		String res = MyUtils.suRun(null);
+		String res = utils.suRun(null);
 		if (!res.equals("")) {
 				throw new Exception(res);
 		}
-		res = MyUtils.suRunScript(null, R.raw.restart_battd);
+		res = utils.suRunScript(null, R.raw.restart_battd);
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
 	}
 
-	static public void restartBattd() {
+	public void restartBattd() {
 		if (triggered) {
-			if (Settings.prefNotifications()) {
-				showNotification(MyUtils.getContext().getText(R.string.msg_restarting).toString());
+			if (settings.prefNotifications()) {
+				showNotification(utils.getContext().getText(R.string.msg_restarting).toString());
 			}
 			try {
 				_restartAction();
 			}
 			catch (Exception ex) {
-				if (Settings.prefNotifications()) {
-					showNotification(MyUtils.getContext().getText(R.string.err_restart_short).toString());
+				if (settings.prefNotifications()) {
+					showNotification(utils.getContext().getText(R.string.err_restart_short).toString());
 				}
 			}
 		} else {
-			(new ProgressRunner(R.string.msg_restarting, R.string.msg_restart_done, R.string.err_restart) {
+			(new ProgressRunner(utils, R.string.msg_restarting, R.string.msg_restart_done, R.string.err_restart) {
 				public void onRun() throws Exception {
 					_restartAction();
 				}
@@ -283,37 +180,37 @@ public class BatteryFix {
 		}
 	}
 
-	static private void _rebootAction() throws Exception {
+	private void _rebootAction() throws Exception {
 		try {
-			String ret = MyUtils.suRunScript(null, R.raw.reboot);
+			String ret = utils.suRunScript(null, R.raw.reboot);
 			if (!ret.equals("")) {
 				throw new Exception(ret);
 			}
 		}
 		catch (Exception ex) {
-			MyUtils.rebootCommand(null);
+			utils.rebootCommand(null);
 		}
 	}
 
-	static public void reboot() {
+	public void reboot() {
 		try {
-			MyUtils.rebootApi(null);
+			utils.rebootApi(null);
 		}
 		catch (Exception ex) {
 			if (triggered) {
-				if (Settings.prefNotifications()) {
-					showNotification(MyUtils.getContext().getText(R.string.msg_autoreboot).toString());
+				if (settings.prefNotifications()) {
+					showNotification(utils.getContext().getText(R.string.msg_autoreboot).toString());
 				}
 				try {
 					_rebootAction();
 				}
 				catch (Exception ex2) {
-					if (Settings.prefNotifications()) {
-						showNotification(MyUtils.getContext().getText(R.string.err_reboot_short).toString());
+					if (settings.prefNotifications()) {
+						showNotification(utils.getContext().getText(R.string.err_reboot_short).toString());
 					}
 				}
 			} else {
-				(new ProgressRunner(R.string.msg_rebooting, -1, R.string.err_reboot) {
+				(new ProgressRunner(utils, R.string.msg_rebooting, -1, R.string.err_reboot) {
 					public void onRun() throws Exception {
 						_rebootAction();
 					}
@@ -322,51 +219,152 @@ public class BatteryFix {
 		}
 	}
 
-	static public boolean canCharging() {
+	public void monStart() {
+		utils.getContext().startService(new Intent(utils.getContext(), MonitorService.class));
+	}
+
+	public void monStop() {
+		utils.getContext().stopService(new Intent(utils.getContext(), MonitorService.class));
+	}
+
+	public boolean monRunning() {
+		Context c = utils.getContext();
+		ActivityManager manager = (ActivityManager)c.getSystemService(Activity.ACTIVITY_SERVICE);
+		for (ActivityManager.RunningServiceInfo svc : manager.getRunningServices(Integer.MAX_VALUE)) {
+			if (MonitorService.class.getName().equals(svc.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void monCondStart() {
+		if (!monRunning()) {
+			monStart();
+		}
+	}
+
+	public void monCondStop() {
+		if (monRunning()) {
+			monStop();
+		}
+	}
+
+	public void setupCharging() throws Exception {
+		if (shell != null) {
+			return;
+		}
+		shell = new ShellInterface(utils, utils.suFind());
+	}
+
+	public void setupChargingForUI() {
+		try {
+			setupCharging();
+		}
+		catch (Exception ex) {
+			showError(R.string.err_su, ex);
+		}
+		siTried = true;
+	}
+
+	public void cleanupCharging() {
+		if (shell != null) {
+			try {
+				shell.close();
+			}
+			catch (Exception ex) { }
+		}
+		shell = null;
+		siTried = false;
+	}
+
+	public boolean canCharging() {
+		if (shell == null && siTried) {
+			hasCharging = HasCharging.NO;
+		}
 		if (hasCharging != HasCharging.UNKNOWN) {
 			return (hasCharging == HasCharging.YES) ? true : false;
 		}
-		try {
-			File f = new File(CHARGING_FILE);
-			if (f.exists()) {
-				hasCharging = HasCharging.YES;
-				throw new IOException("done");
+		if (hasCharging == HasCharging.UNKNOWN) {
+			try {
+				File f = new File(CHARGING_FILE);
+				if (f.exists()) {
+					hasCharging = HasCharging.YES;
+				}
 			}
-			String res = MyUtils.suRun(null, String.format("echo '%s'*", CHARGING_FILE));
-			if (res.equals(CHARGING_FILE)) {
-				hasCharging = HasCharging.YES;
-				throw new IOException("done");
+			catch (Exception ex) { }
+		}
+		if (hasCharging == HasCharging.UNKNOWN && (shell != null || !siTried)) {
+			try {
+				String cmd = String.format("echo '%s'*", CHARGING_FILE);
+				String res = (shell == null) ? utils.suRun(null, cmd) : shell.sendAndReceive(cmd);
+				if (res.equals(CHARGING_FILE)) {
+					hasCharging = HasCharging.YES;
+				}
 			}
-			hasCharging = HasCharging.NO;
+			catch (Exception ex) { }
 		}
-		catch (IOException ex) {
-			// ignore
-		}
-		catch (Exception ex) {
+		if (hasCharging == HasCharging.UNKNOWN) {
 			hasCharging = HasCharging.NO;
 		}
 		return (hasCharging == HasCharging.YES) ? true : false;
 	}
 
-	static public void setCharging(boolean enabled) {
+	public void setCharging(boolean enabled) throws Exception {
+		if (shell == null && siTried) {
+			return;
+		}
 		try {
-			if (MyUtils.shFind() == null) {
-				throw new Exception(MyUtils.getContext().getText(R.string.err_shell).toString());
+			String cmd = String.format("echo %d > '%s'", enabled ? 0 : 1, CHARGING_FILE);
+			if (shell == null) {
+				if (utils.shFind() == null) {
+					throw new Exception(utils.getContext().getText(R.string.err_shell).toString());
+				}
+				// test run, to see if we can su at all
+				String res = utils.suRun(null);
+				if (!res.equals("")) {
+						throw new Exception(res);
+				}
 			}
-			// test run, to see if we can su at all
-			String res = MyUtils.suRun(null);
-			if (!res.equals("")) {
-					throw new Exception(res);
+			String res = null;
+			Exception ex = null;
+			try {
+				res = (shell == null) ? utils.suRun(null, cmd) : (shell.sendCommand(cmd) ? "" : "Error running shell command");
 			}
-			res = MyUtils.suRun(null, String.format("echo %d > %s", enabled ? 0 : 1, CHARGING_FILE));
-			if (!res.equals("")) {
-				throw new Exception(res);
+			catch (Exception _ex) {
+				ex = _ex;
+				res = null;
+			}
+			if (shell != null && !shell.isProcessAlive() && !siTried) {
+				try {
+					shell.close();
+				}
+				catch (Exception _ex) { }
+				siTried = true;
+			}
+			if (ex != null) {
+				throw ex;
+			}
+			if ((res == null && ex != null) || (res != null && !res.equals(""))) {
+				throw (res == null) ? ex : new Exception(res);
 			}
 		}
-		catch (Exception ex) { }
+		catch (Exception ex) {
+			if (shell != null && !triggered) {
+				try {
+					shell.close();
+				}
+				catch (Exception _ex) { }
+				shell = null;
+				siTried = true;
+				showError(R.string.err_su, ex);
+			} else {
+				throw ex;
+			}
+		}
 	}
 
-	static public boolean getCharging() {
+	public boolean getCharging() throws Exception {
 		String res = null;
 		try {
 			File f = new File(CHARGING_FILE);
@@ -377,17 +375,36 @@ public class BatteryFix {
 				}
 				catch (Exception ex) { }
 			}
-			if (MyUtils.shFind() == null) {
-				throw new Exception(MyUtils.getContext().getText(R.string.err_shell).toString());
+			String cmd = String.format("cat '%s'", CHARGING_FILE);
+			if (shell == null && !siTried) {
+				if (utils.shFind() == null) {
+					throw new Exception(utils.getContext().getText(R.string.err_shell).toString());
+				}
+				// test run, to see if we can su at all
+				String test = utils.suRun(null);
+				if (!test.equals("")) {
+					throw new Exception(test);
+				}
 			}
-			// test run, to see if we can su at all
-			String test = MyUtils.suRun(null);
-			if (!test.equals("")) {
-				throw new Exception(test);
+			if (shell == null && siTried) {
+				res = "";
+			} else {
+				res = (shell == null) ? utils.suRun(null, cmd) : shell.sendAndReceive(cmd);
 			}
-			res = MyUtils.suRun(null, String.format("cat '%s'", CHARGING_FILE));
 		}
-		catch (Exception ex) { }
+		catch (Exception ex) {
+			if (shell != null && !triggered) {
+				try {
+					shell.close();
+				}
+				catch (Exception _ex) { }
+				shell = null;
+				siTried = true;
+				showError(R.string.err_su, ex);
+			} else {
+				throw ex;
+			}
+		}
 		if (res != null && !res.equals("")) {
 			try {
 				Integer v = Integer.valueOf(res);
@@ -398,52 +415,20 @@ public class BatteryFix {
 		return true;
 	}
 
-	static public void monStart() {
-		MyUtils.getContext().startService(new Intent(MyUtils.getContext(), MonitorService.class));
-	}
-
-	static public void monStop() {
-		MyUtils.getContext().stopService(new Intent(MyUtils.getContext(), MonitorService.class));
-	}
-
-	static public boolean monRunning() {
-		Context c = MyUtils.getContext();
-		ActivityManager manager = (ActivityManager)c.getSystemService(Activity.ACTIVITY_SERVICE);
-		for (ActivityManager.RunningServiceInfo svc : manager.getRunningServices(Integer.MAX_VALUE)) {
-			if (MonitorService.class.getName().equals(svc.service.getClassName())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	static public void monCondStart() {
-		if (!monRunning()) {
-			monStart();
-		}
-	}
-
-	static public void monCondStop() {
-		if (monRunning()) {
-			monStop();
-		}
-	}
-
-	static public void setUsbCharging(boolean enabled) {
+	public void setUsbCharging(boolean enabled) {
 		try {
+			if (enabled == getCharging()) {
+				return;
+			}
 			if (enabled) {
-				if (!BatteryFix.getCharging()) {
-					setCharging(true);
-					if (Settings.prefNotifications()) {
-						showNotification(MyUtils.getContext().getText(R.string.msg_usb_enabled).toString());
-					}
+				setCharging(true);
+				if (settings.prefNotifications()) {
+					showNotification(utils.getContext().getText(R.string.msg_usb_enabled).toString());
 				}
 			} else {
-				if (BatteryFix.getCharging()) {
-					setCharging(false);
-					if (Settings.prefNotifications()) {
-						showNotification(MyUtils.getContext().getText(R.string.msg_usb_disabled).toString());
-					}
+				setCharging(false);
+				if (settings.prefNotifications()) {
+					showNotification(utils.getContext().getText(R.string.msg_usb_disabled).toString());
 				}
 			}
 		}
@@ -452,25 +437,25 @@ public class BatteryFix {
 		}
 	}
 
-	static public void checkPower() {
-		if (Settings.prefNoUsbCharging() && canCharging()) {
-			setUsbCharging(BatteryInfo.isOnUSB ? false : true);
+	public void checkPower() {
+		if (settings.prefNoUsbCharging() && canCharging()) {
+			setUsbCharging(info.isOnUSB ? false : true);
 		}
 		boolean isCharging = (
-			BatteryInfo.isOnPower &&
-			!BatteryInfo.isDischarging &&
+			info.isOnPower &&
+			!info.isDischarging &&
 			(
-				!BatteryInfo.isOnUSB ||
-				!Settings.prefNoUsbCharging() ||
+				!info.isOnUSB ||
+				!settings.prefNoUsbCharging() ||
 				!canCharging()
 			)
 		) ? true : false;
 		if (isCharging) {
-			if (Settings.prefAutoFix() && triggered) {
+			if (settings.prefAutoFix() && triggered) {
 				run();
 			}
-			if (!(BatteryInfo.isFull || BatteryInfo.seemsFull)) {
-				switch (Settings.prefAutoAction()) {
+			if (!(info.isFull || info.seemsFull)) {
+				switch (settings.prefAutoAction()) {
 					case REBOOT:
 					case RESTART:
 						monCondStart();

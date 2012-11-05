@@ -11,28 +11,35 @@ public class BatteryInfo {
 	final private static long MAX_TIME = 30 * 60 * 1000;	// in ms - 30 minutes
 
 	static private final String dir = "/sys/class/power_supply/battery";
-	static public boolean isOnAC = false;
-	static public boolean isOnUSB = false;
-	static public boolean isOnPower = false;
-	static public boolean isCharging = false;
-	static public boolean isDischarging = false;
-	static public boolean isFull = false;
-	static public boolean seemsFull = false;
-	static public String battActual;
-	static public String battShown;
-	static public String battHealth;
-	static public String battVoltage;
-	static public String battTemp;
-	static private int state;
-	static private int plugged;
-	static private String lastVoltage = null;
-	static private long lastTime = -1;
+	public boolean isOnAC = false;
+	public boolean isOnUSB = false;
+	public boolean isOnPower = false;
+	public boolean isCharging = false;
+	public boolean isDischarging = false;
+	public boolean isFull = false;
+	public boolean seemsFull = false;
+	public String battActual;
+	public String battShown;
+	public String battHealth;
+	public String battVoltage;
+	public String battTemp;
+	private MyUtils utils;
+	private int state;
+	private int plugged;
+	private String lastVoltage = null;
+	private long lastTime = -1;
 
-	static public void init() {
+	public BatteryInfo(MyUtils u) {
+		utils = u;
 		init(null);
 	}
 
-	static public void init(Intent i) {
+	public BatteryInfo(MyUtils u, Intent i) {
+		utils = u;
+		init(i);
+	}
+
+	public void init(Intent i) {
 		if (i == null) {
 			refresh();
 		} else {
@@ -54,14 +61,14 @@ public class BatteryInfo {
 		return null;
 	}
 
-	static public void refresh(Intent i) {
+	public void refresh(Intent i) {
 		battHealth = getFile("health");
 		battActual = getFile("capacity");
 		battShown = getFile("charge_counter");
 		battVoltage = getFile("voltage_now");
 		battTemp = getFile("temp");
 		if (i == null) {
-			i = MyUtils.getContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+			i = utils.getContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 		}
 		plugged = i.getIntExtra("plugged", -1);
 		isOnAC = (plugged == BatteryManager.BATTERY_PLUGGED_AC) ? true : false;
@@ -98,7 +105,7 @@ public class BatteryInfo {
 		log();
 	}
 
-	static public void refresh() {
+	public void refresh() {
 		refresh(null);
 	}
 
@@ -109,8 +116,8 @@ public class BatteryInfo {
 		return v;
 	}
 
-	static public void log(String tag) {
-		MyUtils.log(tag, String.format("health=[%s] voltage=[%s] temp=[%s] actual=[%s] shown=[%s] -- plugged=[%d] state=[%d] -- onAc=[%s] onUsb=[%s] isCharging=[%s] isDischarging=[%s] isFull=[%s] seemsFull=[%s] -- lastVoltage=[%s] lastTime=[%d]",
+	public void log(String tag) {
+		utils.log(tag, String.format("health=[%s] voltage=[%s] temp=[%s] actual=[%s] shown=[%s] -- plugged=[%d] state=[%d] -- onAc=[%s] onUsb=[%s] isCharging=[%s] isDischarging=[%s] isFull=[%s] seemsFull=[%s] -- lastVoltage=[%s] lastTime=[%d]",
 			getValue(battHealth),
 			getValue(battVoltage),
 			getValue(battTemp),
@@ -129,7 +136,7 @@ public class BatteryInfo {
 		));
 	}
 
-	static public void log() {
+	public void log() {
 		log("<battery>");
 	}
 }

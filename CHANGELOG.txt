@@ -1,3 +1,10 @@
+0.30-beta2
+	- better interacting with Superuser
+	- rewritten some more code, converted a lot of static code to
+	  dynamic
+	- other bugfixes
+
+
 0.30-beta1
 	- re-added deleting batterystats.bin as an option (off by default)
 	- moved all preferences to the settings screen

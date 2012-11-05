@@ -8,10 +8,9 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import hr.ravilov.atrixbatteryfix.BatteryFix;
 
 public class Settings extends PreferenceActivity {
-	static public final String
+	public static final String
 		PREF_ABOUT = "about",
 		PREF_NOTIFICATIONS = "notifications",
 		PREF_BATTSTATS = "battstats",
@@ -77,45 +76,28 @@ public class Settings extends PreferenceActivity {
 		}
 	}
 
-	public static final Prefs prefs = new Prefs();
-	static {
-		prefs.add(PREF_ABOUT, new Pref<Boolean>());
-		prefs.add(PREF_NOTIFICATIONS, new Pref<Boolean>());
-		prefs.add(PREF_BATTSTATS, new Pref<Boolean>());
-		prefs.add(PREF_AUTOFIX, new Pref<Boolean>());
-		prefs.add(PREF_AUTOACTION, new Pref<AutoAction>());
-		prefs.add(PREF_NOUSBCHARGING, new Pref<Boolean>());
-	}
+	private static class Converter {
+		private HashMap<AutoAction, String> aaMap = new HashMap<AutoAction, String>();
+		private HashMap<String, String> eMap = new HashMap<String, String>();
+		private MyUtils utils;
 
-	protected static SharedPreferences pref;
-	protected CheckBoxPreference nousbcharging;
-	protected ListPreference autoaction;
-
-	private static class cvt {
-		static private boolean initted = false;
-		static private HashMap<AutoAction, String> aaMap = new HashMap<AutoAction, String>();
-		static private HashMap<String, String> eMap = new HashMap<String, String>();
-		static {
+		public Converter(MyUtils u) {
+			utils = u;
+			aaMap = new HashMap<AutoAction, String>();
+			eMap = new HashMap<String, String>();
 			aaMap.clear();
 			aaMap.put(AutoAction.NONE, "none");
 			aaMap.put(AutoAction.REBOOT, "reboot");
 			aaMap.put(AutoAction.RESTART, "restart");
-		}
-
-		public static void init() {
-			if (initted) {
-				return;
-			}
 			eMap.clear();
-			String[] entries = MyUtils.getContext().getResources().getStringArray(R.array.pref_autoaction_values);
-			String[] values = MyUtils.getContext().getResources().getStringArray(R.array.pref_autoaction_entries);
+			String[] entries = utils.getContext().getResources().getStringArray(R.array.pref_autoaction_values);
+			String[] values = utils.getContext().getResources().getStringArray(R.array.pref_autoaction_entries);
 			for (int i = 0; i < entries.length; i++) {
 				eMap.put(entries[i], values[i]);
 			}
-			initted = true;
 		}
 
-		public static AutoAction getAutoAction(String e) {
+		public AutoAction getAutoAction(String e) {
 			for (AutoAction aa : aaMap.keySet()) {
 				String ee = aaMap.get(aa);
 				if (ee.equals(e)) {
@@ -125,22 +107,51 @@ public class Settings extends PreferenceActivity {
 			return null;
 		}
 
-		public static String getEntry(AutoAction aa) {
+		public String getEntry(AutoAction aa) {
 			return aaMap.get(aa);
 		}
 
-		public static String getDesc(String e) {
+		public String getDesc(String e) {
 			return eMap.get(e);
 		}
+	}
+
+	protected static SharedPreferences pref;
+	protected CheckBoxPreference nousbcharging;
+	protected ListPreference autoaction;
+	private Prefs prefs;
+	private MyUtils utils;
+	private BatteryFix fix;
+	private Converter cvt;
+
+	public Settings init(MyUtils u) {
+		if (u == null) {
+			utils = null;
+			cvt = null;
+		} else {
+			utils = u;
+			cvt = new Converter(utils);
+		}
+		prefs = new Prefs();
+		prefs.add(PREF_ABOUT, new Pref<Boolean>());
+		prefs.add(PREF_NOTIFICATIONS, new Pref<Boolean>());
+		prefs.add(PREF_BATTSTATS, new Pref<Boolean>());
+		prefs.add(PREF_AUTOFIX, new Pref<Boolean>());
+		prefs.add(PREF_AUTOACTION, new Pref<AutoAction>());
+		prefs.add(PREF_NOUSBCHARGING, new Pref<Boolean>());
+		pref = PreferenceManager.getDefaultSharedPreferences(utils.getContext());
+		load();
+		return this;
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		MyUtils.init(this);
+		utils = new MyUtils(this);
+		fix = new BatteryFix(utils, this.init(utils), new BatteryInfo(utils), false);
 		addPreferencesFromResource(R.xml.prefs);
 		nousbcharging = (CheckBoxPreference)findPreference("nousbcharging");
-		nousbcharging.setEnabled(BatteryFix.canCharging() ? true : false);
+		nousbcharging.setEnabled(fix.canCharging() ? true : false);
 		autoaction = (ListPreference)findPreference("autoaction");
 		aaSetSummary();
 		autoaction.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -153,7 +164,6 @@ public class Settings extends PreferenceActivity {
 	}
 
 	protected void aaSetSummary(String value) {
-		cvt.init();
 		autoaction.setSummary(cvt.getDesc(value));
 	}
 
@@ -161,12 +171,7 @@ public class Settings extends PreferenceActivity {
 		aaSetSummary(autoaction.getValue());
 	}
 
-	public static void init() {
-		pref = PreferenceManager.getDefaultSharedPreferences(MyUtils.getContext());
-		load();
-	}
-
-	public static boolean hasOldProps() {
+	public boolean hasOldProps() {
 		for (String key : prefs.getAll().keySet()) {
 			boolean found = false;
 			for (String k2 : prefs.list()) {
@@ -184,7 +189,7 @@ public class Settings extends PreferenceActivity {
 		return false;
 	}
 
-	public static void upgradeProps() {
+	public void upgradeProps() {
 		try {
 			if (pref.contains("enabled")) {
 				prefs.get(PREF_AUTOFIX).set(pref.getBoolean("enabled", ((Boolean)prefs.get(PREF_AUTOFIX).value).booleanValue()));
@@ -201,7 +206,7 @@ public class Settings extends PreferenceActivity {
 		save();
 	}
 
-	public static void load() {
+	public void load() {
 		// defaults
 		prefs.get(PREF_AUTOFIX).set(false);
 		prefs.get(PREF_NOTIFICATIONS).set(true);
@@ -209,7 +214,6 @@ public class Settings extends PreferenceActivity {
 		prefs.get(PREF_BATTSTATS).set(false);
 		prefs.get(PREF_NOUSBCHARGING).set(false);
 		prefs.get(PREF_ABOUT).set(true);
-		cvt.init();
 		try {
 			prefs.get(PREF_AUTOFIX).set(pref.getBoolean(PREF_AUTOFIX, ((Boolean)prefs.get(PREF_AUTOFIX).value).booleanValue()));
 			prefs.get(PREF_NOTIFICATIONS).set(pref.getBoolean(PREF_NOTIFICATIONS, ((Boolean)prefs.get(PREF_NOTIFICATIONS).value).booleanValue()));
@@ -224,8 +228,7 @@ public class Settings extends PreferenceActivity {
 		}
 	}
 
-	public static void save() {
-		cvt.init();
+	public void save() {
 		SharedPreferences.Editor editor = pref.edit();
 		editor.clear();
 		editor.putBoolean(PREF_AUTOFIX, ((Boolean)prefs.get(PREF_AUTOFIX).value).booleanValue());
@@ -237,11 +240,11 @@ public class Settings extends PreferenceActivity {
 		editor.commit();
 	}
 
-	public static PrefList backup() {
+	public PrefList backup() {
 		return prefs.getAll();
 	}
 
-	public static void restore(PrefList p) {
+	public void restore(PrefList p) {
 		for (String key : p.keySet()) {
 			if (!prefs.exists(key)) {
 				continue;
@@ -250,7 +253,7 @@ public class Settings extends PreferenceActivity {
 		}
 	}
 
-	public static boolean equals(PrefList p1, PrefList p2) {
+	public boolean equals(PrefList p1, PrefList p2) {
 		String[] tmp = {};
 		String[] keys1 = p1.keySet().toArray(tmp);
 		String[] keys2 = p2.keySet().toArray(tmp);
@@ -285,57 +288,57 @@ public class Settings extends PreferenceActivity {
 
 	// shortcut methods
 
-	public static boolean prefAutoFix(Boolean value) {
+	public boolean prefAutoFix(Boolean value) {
 		prefs.get(PREF_AUTOFIX).set(value);
 		return (Boolean)prefs.get(PREF_AUTOFIX).value;
 	}
 
-	public static boolean prefAutoFix() {
+	public boolean prefAutoFix() {
 		return prefAutoFix(null);
 	}
 
-	public static boolean prefNotifications(Boolean value) {
+	public boolean prefNotifications(Boolean value) {
 		prefs.get(PREF_NOTIFICATIONS).set(value);
 		return (Boolean)prefs.get(PREF_NOTIFICATIONS).value;
 	}
 
-	public static boolean prefNotifications() {
+	public boolean prefNotifications() {
 		return prefNotifications(null);
 	}
 
-	public static AutoAction prefAutoAction(AutoAction value) {
+	public AutoAction prefAutoAction(AutoAction value) {
 		prefs.get(PREF_AUTOACTION).set(value);
 		return (AutoAction)prefs.get(PREF_AUTOACTION).value;
 	}
 
-	public static AutoAction prefAutoAction() {
+	public AutoAction prefAutoAction() {
 		return prefAutoAction(null);
 	}
 
-	public static boolean prefBattStats(Boolean value) {
+	public boolean prefBattStats(Boolean value) {
 		prefs.get(PREF_BATTSTATS).set(value);
 		return (Boolean)prefs.get(PREF_BATTSTATS).value;
 	}
 
-	public static boolean prefBattStats() {
+	public boolean prefBattStats() {
 		return prefBattStats(null);
 	}
 
-	public static boolean prefNoUsbCharging(Boolean value) {
+	public boolean prefNoUsbCharging(Boolean value) {
 		prefs.get(PREF_NOUSBCHARGING).set(value);
 		return (Boolean)prefs.get(PREF_NOUSBCHARGING).value;
 	}
 
-	public static boolean prefNoUsbCharging() {
+	public boolean prefNoUsbCharging() {
 		return prefNoUsbCharging(null);
 	}
 
-	public static boolean prefAbout(Boolean value) {
+	public boolean prefAbout(Boolean value) {
 		prefs.get(PREF_ABOUT).set(value);
 		return (Boolean)prefs.get(PREF_ABOUT).value;
 	}
 
-	public static boolean prefAbout() {
+	public boolean prefAbout() {
 		return prefAbout(null);
 	}
 }

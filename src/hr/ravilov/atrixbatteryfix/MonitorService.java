@@ -7,12 +7,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.widget.Toast;
-import hr.ravilov.atrixbatteryfix.Settings;
-import hr.ravilov.atrixbatteryfix.BatteryInfo;
 
 public class MonitorService extends Service {
 	private Thread th;
 	private volatile boolean thTerminate;
+	private MyUtils utils;
+	private BatteryInfo info;
+	private BatteryFix fix;
+	private Settings settings;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -38,9 +40,10 @@ public class MonitorService extends Service {
 
 	protected void start() {
 		try {
-			MyUtils.init(this);
-			BatteryInfo.init();
-			Settings.init();
+			utils = new MyUtils(this);
+			settings = (new Settings()).init(utils);
+			info = new BatteryInfo(utils);
+			fix = new BatteryFix(utils, settings, info, true);
 			thTerminate = false;
 			if (th != null) {
 				stop();
@@ -56,22 +59,19 @@ public class MonitorService extends Service {
 					synchronized (this) {
 						actionDone = true;
 					}
-					MyUtils.init(MonitorService.this);
-					Settings.init();
-					BatteryFix.init(true);
-					if (Settings.prefAutoFix()) {
+					if (settings.prefAutoFix()) {
 						try {
-							BatteryFix.fixBattery();
+							fix.fixBattery();
 						}
 						catch (Exception ex) { }
 					}
-					switch (Settings.prefAutoAction()) {
+					switch (settings.prefAutoAction()) {
 						case REBOOT: {
-								BatteryFix.reboot();
+								fix.reboot();
 							}
 							break;
 						case RESTART: {
-								BatteryFix.restartBattd();
+								fix.restartBattd();
 							}
 							break;
 						case NONE:
@@ -86,9 +86,12 @@ public class MonitorService extends Service {
 					br = new BroadcastReceiver() {
 						@Override
 						public void onReceive(Context c, Intent i) {
-							BatteryInfo.refresh(i);
-							if (BatteryInfo.isOnPower && (BatteryInfo.isFull || BatteryInfo.seemsFull)) {
+							info.refresh(i);
+							if (info.isOnPower && (info.isFull || info.seemsFull)) {
 								action();
+							}
+							if (info.isFull) {
+								Thread.currentThread().interrupt();
 							}
 						}
 					};
@@ -105,15 +108,15 @@ public class MonitorService extends Service {
 						actionDone = false;
 					}
 					addFilter();
-					while (BatteryInfo.isOnPower && !MonitorService.this.thTerminate) {
+					while (info.isOnPower && !info.isFull && !MonitorService.this.thTerminate) {
 						try {
 							Thread.sleep(60 * 1000);
 						}
 						catch (Exception ex) { }
-						BatteryInfo.refresh();
+						info.refresh();
 					}
 					delFilter();
-					if (BatteryInfo.isOnPower && actionDone) {
+					if (info.isOnPower && actionDone) {
 						try {
 							Thread.sleep(5 * 1000);
 						}
@@ -123,8 +126,8 @@ public class MonitorService extends Service {
 			});
 			th.setDaemon(true);
 			th.start();
-			if (Settings.prefNotifications()) {
-				BatteryFix.showNotification(getString(R.string.msg_start));
+			if (settings.prefNotifications()) {
+				fix.showNotification(getString(R.string.msg_start));
 			}
 		}
 		catch (Exception ex) {
@@ -142,10 +145,8 @@ public class MonitorService extends Service {
 			}
 			th.interrupt();
 			th.join();
-			MyUtils.init(this);
-			Settings.init();
-			if (Settings.prefNotifications()) {
-				BatteryFix.showNotification(getString(R.string.msg_stop));
+			if (settings.prefNotifications()) {
+				fix.showNotification(getString(R.string.msg_stop));
 			}
 		}
 		catch (Exception ex) {
