@@ -24,6 +24,7 @@ public class MonitorService extends Service {
 	@Override
 	public void onStart(Intent i, int startId) {
 		super.onStart(i, startId);
+		Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
 		start();
 	}
 
@@ -39,14 +40,19 @@ public class MonitorService extends Service {
 	}
 
 	protected void start() {
+		if (th != null) {
+			return;
+		}
 		try {
 			utils = new MyUtils(this);
-			settings = (new Settings()).init(utils);
 			info = new BatteryInfo(utils);
+			if (info.isFull) {
+				return;
+			}
+			settings = (new Settings()).init(utils);
 			fix = new BatteryFix(utils, settings, info, true);
-			thTerminate = false;
-			if (th != null) {
-				stop();
+			synchronized (this) {
+				thTerminate = false;
 			}
 			th = new Thread(new Runnable() {
 				private BroadcastReceiver br;
@@ -91,32 +97,41 @@ public class MonitorService extends Service {
 								action();
 							}
 							if (info.isFull) {
+								synchronized (MonitorService.this) {
+									thTerminate = true;
+								}
 								Thread.currentThread().interrupt();
 							}
 						}
 					};
+					utils.log("registering receiver");
 					registerReceiver(br, f);
 				}
 
 				private void delFilter() {
+					utils.log("unregistering receiver");
 					unregisterReceiver(br);
 				}
 
 				@Override
 				public void run() {
+					Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
 					synchronized (this) {
 						actionDone = false;
 					}
 					addFilter();
-					while (info.isOnPower && !info.isFull && !MonitorService.this.thTerminate) {
+					utils.log("entering main loop");
+					while (info.isOnPower && !info.isFull && !thTerminate) {
 						try {
 							Thread.sleep(60 * 1000);
 						}
 						catch (Exception ex) { }
 						info.refresh();
 					}
+					utils.log("exiting main loop");
 					delFilter();
 					if (info.isOnPower && actionDone) {
+						utils.log("settling down");
 						try {
 							Thread.sleep(5 * 1000);
 						}

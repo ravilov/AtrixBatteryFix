@@ -1,3 +1,10 @@
+0.31-beta2
+	- improved the monitoring service
+	- added some debug messages
+	- added a custom uncaught exception handler (just a placeholder
+	  for now)
+
+
 0.31-beta1
 	- better interacting with Superuser
 	- rewritten some more code, converted a lot of static code to

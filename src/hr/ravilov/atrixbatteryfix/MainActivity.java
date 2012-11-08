@@ -20,7 +20,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 public class MainActivity extends Activity implements View.OnClickListener {
-	private static final int REFRESH = 500;	// 1 second
+	private static final int REFRESH = 500;	// 0.5 second
 	private Button force;
 	private Button fix;
 	private ToggleButton charging;
@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
 		setContentView(R.layout.main);
 		utils = new MyUtils(this);
 		settings = (new Settings()).init(utils);

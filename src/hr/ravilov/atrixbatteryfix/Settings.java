@@ -147,6 +147,7 @@ public class Settings extends PreferenceActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
 		utils = new MyUtils(this);
 		fix = new BatteryFix(utils, this.init(utils), new BatteryInfo(utils), false);
 		addPreferencesFromResource(R.xml.prefs);
