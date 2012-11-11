@@ -331,15 +331,15 @@ public class MyUtils {
 		debug = (v == 0) ? Debug.NO : Debug.YES;
 	}
 
-	public void log(String tag, String msg) {
+	public void log(String tag, String msg, Object... args) {
 		getDebug();
 		if (debug != Debug.YES) {
 			return;
 		}
-		Log.d(tag, msg);
+		Log.d(tag, String.format(msg, args));
 	}
 
-	public void log(String msg) {
+	public void log(String msg, Object... args) {
 		getDebug();
 		if (debug != Debug.YES) {
 			return;
@@ -357,6 +357,6 @@ public class MyUtils {
 				defaultTag = "<applog>";
 			}
 		}
-		log(defaultTag, msg);
+		log(defaultTag, msg, args);
 	}
 }

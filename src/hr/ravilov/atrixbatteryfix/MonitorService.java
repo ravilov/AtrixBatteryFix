@@ -15,6 +15,7 @@ public class MonitorService extends Service {
 	private BatteryInfo info;
 	private BatteryFix fix;
 	private Settings settings;
+	private int notificationId = -1;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -39,6 +40,111 @@ public class MonitorService extends Service {
 		stop();
 	}
 
+	@Override
+	public void onLowMemory() {
+	}
+
+	protected void startThread() throws Exception {
+		synchronized (this) {
+			thTerminate = false;
+		}
+		th = new Thread(new Runnable() {
+			private BroadcastReceiver br;
+			private volatile boolean actionDone = false;
+
+			private void action() {
+				if (actionDone) {
+					return;
+				}
+				synchronized (this) {
+					actionDone = true;
+				}
+				if (settings.prefAutoFix() || true) {
+					try {
+						fix.fixBattery();
+					}
+					catch (Exception ex) { }
+				}
+				switch (settings.prefAutoAction()) {
+					case REBOOT: {
+							fix.reboot();
+						}
+						break;
+					case RESTART: {
+							fix.restartBattd();
+						}
+						break;
+					case NONE:
+					default:
+						break;
+				}
+			}
+
+			private void addFilter() {
+				IntentFilter f = new IntentFilter();
+				f.addAction(Intent.ACTION_BATTERY_CHANGED);
+				br = new BroadcastReceiver() {
+					@Override
+					public void onReceive(Context c, Intent i) {
+						info.refresh(i);
+						if (info.isOnPower && (info.isFull || info.seemsFull)) {
+							action();
+						}
+						if (info.isFull) {
+							synchronized (MonitorService.this) {
+								thTerminate = true;
+							}
+							Thread.currentThread().interrupt();
+						}
+					}
+				};
+				utils.log("registering receiver");
+				registerReceiver(br, f);
+			}
+
+			private void delFilter() {
+				utils.log("unregistering receiver");
+				unregisterReceiver(br);
+			}
+
+			@Override
+			public void run() {
+				Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
+				synchronized (this) {
+					actionDone = false;
+				}
+				addFilter();
+				utils.log("entering main service loop");
+				while (info.isOnPower && !info.isFull && !thTerminate) {
+					try {
+						Thread.sleep(60 * 1000);
+					}
+					catch (Exception ex) { }
+					info.refresh();
+				}
+				utils.log("exiting main service loop");
+				delFilter();
+				if (info.isOnPower && actionDone) {
+					utils.log("settling down");
+					try {
+						Thread.sleep(5 * 1000);
+					}
+					catch (Exception ex) { }
+				}
+			}
+		});
+		th.setDaemon(true);
+		th.start();
+	}
+
+	protected void stopThread() throws Exception {
+		synchronized (this) {
+			thTerminate = true;
+		}
+		th.interrupt();
+		th.join();
+	}
+
 	protected void start() {
 		if (th != null) {
 			return;
@@ -51,98 +157,17 @@ public class MonitorService extends Service {
 			}
 			settings = (new Settings()).init(utils);
 			fix = new BatteryFix(utils, settings, info, true);
-			synchronized (this) {
-				thTerminate = false;
-			}
-			th = new Thread(new Runnable() {
-				private BroadcastReceiver br;
-				private volatile boolean actionDone = false;
-
-				private void action() {
-					if (actionDone) {
-						return;
-					}
-					synchronized (this) {
-						actionDone = true;
-					}
-					if (settings.prefAutoFix()) {
-						try {
-							fix.fixBattery();
-						}
-						catch (Exception ex) { }
-					}
-					switch (settings.prefAutoAction()) {
-						case REBOOT: {
-								fix.reboot();
-							}
-							break;
-						case RESTART: {
-								fix.restartBattd();
-							}
-							break;
-						case NONE:
-						default:
-							break;
-					}
-				}
-
-				private void addFilter() {
-					IntentFilter f = new IntentFilter();
-					f.addAction(Intent.ACTION_BATTERY_CHANGED);
-					br = new BroadcastReceiver() {
-						@Override
-						public void onReceive(Context c, Intent i) {
-							info.refresh(i);
-							if (info.isOnPower && (info.isFull || info.seemsFull)) {
-								action();
-							}
-							if (info.isFull) {
-								synchronized (MonitorService.this) {
-									thTerminate = true;
-								}
-								Thread.currentThread().interrupt();
-							}
-						}
-					};
-					utils.log("registering receiver");
-					registerReceiver(br, f);
-				}
-
-				private void delFilter() {
-					utils.log("unregistering receiver");
-					unregisterReceiver(br);
-				}
-
-				@Override
-				public void run() {
-					Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
-					synchronized (this) {
-						actionDone = false;
-					}
-					addFilter();
-					utils.log("entering main loop");
-					while (info.isOnPower && !info.isFull && !thTerminate) {
-						try {
-							Thread.sleep(60 * 1000);
-						}
-						catch (Exception ex) { }
-						info.refresh();
-					}
-					utils.log("exiting main loop");
-					delFilter();
-					if (info.isOnPower && actionDone) {
-						utils.log("settling down");
-						try {
-							Thread.sleep(5 * 1000);
-						}
-						catch (Exception ex) { }
-					}
-				}
-			});
-			th.setDaemon(true);
-			th.start();
+			startThread();
 			if (settings.prefNotifications()) {
-				fix.showNotification(getString(R.string.msg_start));
+				if (notificationId > 0) {
+					fix.hideNotification(notificationId);
+				}
+				notificationId = fix.showNotification(
+					getString(R.string.msg_start),
+					new Intent(this, MainActivity.class),
+					getString(R.string.msg_running),
+					getString(R.string.msg_running_)
+				);
 			}
 		}
 		catch (Exception ex) {
@@ -155,12 +180,12 @@ public class MonitorService extends Service {
 			return;
 		}
 		try {
-			synchronized (this) {
-				thTerminate = true;
-			}
-			th.interrupt();
-			th.join();
+			stopThread();
 			if (settings.prefNotifications()) {
+				if (notificationId > 0) {
+					fix.hideNotification(notificationId);
+					notificationId = -1;
+				}
 				fix.showNotification(getString(R.string.msg_stop));
 			}
 		}

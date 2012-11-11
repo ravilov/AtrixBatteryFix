@@ -90,12 +90,15 @@ public class BatteryInfo {
 		// heuristics for detecting if battery is done charging
 		// if the voltage does not change within MAX_TIME milliseconds, the battery is considered charged
 		seemsFull = isFull ? true : false;
-		if (isOnPower && !isFull && battVoltage != null) {
+		if (!seemsFull && isOnPower && battVoltage != null) {
 			if (lastVoltage == null || lastTime <= 0 || !lastVoltage.equals(battVoltage)) {
 				lastVoltage = battVoltage;
 				lastTime = System.currentTimeMillis();
+				utils.log("got new voltage %s", (Object)lastVoltage);
 			} else {
-				seemsFull = (System.currentTimeMillis() - lastTime >= MAX_TIME) ? true : false;
+				long time = System.currentTimeMillis();
+				utils.log("voltage stayed at %s for %d ms", (Object)lastVoltage, time - lastTime);
+				seemsFull = (time - lastTime >= MAX_TIME) ? true : false;
 			}
 		} else {
 			lastVoltage = null;

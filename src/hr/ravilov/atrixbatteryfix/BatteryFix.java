@@ -92,19 +92,47 @@ public class BatteryFix {
 		return true;
 	}
 
-	public void showNotification(String str) {
+	public int showNotification(String str, Intent i, String title, String text) {
 		CRC32 gen = new CRC32();
 		gen.update(str.getBytes());
 		int id = (int)gen.getValue();
 		nm.cancel(id);
 		Notification ntf = new Notification(R.drawable.icon, str, System.currentTimeMillis());
-		ntf.flags |= Notification.FLAG_AUTO_CANCEL;
+		if (i == null) {
+			ntf.flags |= Notification.FLAG_AUTO_CANCEL;
+		} else {
+			ntf.flags |= Notification.FLAG_ONGOING_EVENT;
+		}
 		try {
-			ntf.setLatestEventInfo(utils.getContext(), null, null, PendingIntent.getActivity(utils.getContext(), 0, new Intent(), 0));
+			ntf.setLatestEventInfo(
+				utils.getContext(),
+				title,
+				text,
+				PendingIntent.getActivity(
+					utils.getContext(),
+					0,
+					(i == null) ? new Intent() : i,
+					PendingIntent.FLAG_UPDATE_CURRENT
+				)
+			);
 		}
 		catch (Exception ex) { }
 		nm.notify(id, ntf);
-		nm.cancel(id);
+		if (i == null) {
+			hideNotification(id);
+		}
+		return id;
+	}
+
+	public int showNotification(String str) {
+		return showNotification(str, null, null, null);
+	}
+
+	public void hideNotification(int id) {
+		try {
+			nm.cancel(id);
+		}
+		catch (Exception ex) { }
 	}
 
 	public void fixBattery() throws Exception {

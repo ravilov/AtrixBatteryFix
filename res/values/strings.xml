@@ -16,6 +16,8 @@
 	<string name="msg_autofix">Power detected, starting battery fix</string>
 	<string name="msg_start">Battery monitoring started</string>
 	<string name="msg_stop">Battery monitoring stopped</string>
+	<string name="msg_running">Battery monitoring active</string>
+	<string name="msg_running_"></string>
 	<string name="msg_done">Battery fix done!</string>
 	<string name="msg_done_reminder">Battery fix done!\nRemember to reboot for changes to take effect.</string>
 	<string name="msg_done_action"><![CDATA[
