@@ -178,12 +178,13 @@ public class BatteryFix {
 		// test run, to see if we can su at all
 		String res = utils.suRun(null);
 		if (!res.equals("")) {
-				throw new Exception(res);
+			throw new Exception(res);
 		}
 		res = utils.suRunScript(null, R.raw.restart_battd);
 		if (!res.equals("")) {
 			throw new Exception(res);
 		}
+		checkPower();
 	}
 
 	public void restartBattd() {
