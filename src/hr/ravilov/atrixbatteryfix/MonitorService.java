@@ -45,9 +45,6 @@ public class MonitorService extends Service {
 	}
 
 	protected void startThread() throws Exception {
-		synchronized (this) {
-			thTerminate = false;
-		}
 		th = new Thread(new Runnable() {
 			private BroadcastReceiver br;
 			private volatile boolean actionDone = false;
@@ -59,6 +56,7 @@ public class MonitorService extends Service {
 				synchronized (this) {
 					actionDone = true;
 				}
+				utils.log("starting auto-action");
 				if (settings.prefAutoFix() || true) {
 					try {
 						fix.fixBattery();
@@ -78,6 +76,7 @@ public class MonitorService extends Service {
 					default:
 						break;
 				}
+				utils.log("auto-action done");
 			}
 
 			private void addFilter() {
@@ -133,6 +132,9 @@ public class MonitorService extends Service {
 				}
 			}
 		});
+		synchronized (this) {
+			thTerminate = false;
+		}
 		th.setDaemon(true);
 		th.start();
 	}
