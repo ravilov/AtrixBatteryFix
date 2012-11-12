@@ -48,6 +48,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		info = new BatteryInfo(utils);
 		bfix = new BatteryFix(utils, settings, info, false);
 		bfix.setupChargingForUI();
+		bfix.checkPower();
 		justStarted = true;
 		force = (Button)findViewById(R.id.buttonForce);
 		fix = (Button)findViewById(R.id.buttonFix);
