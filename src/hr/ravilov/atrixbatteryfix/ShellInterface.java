@@ -33,7 +33,7 @@ public class ShellInterface {
 	}
 
 	protected void open() throws Exception {
-		utils.log(TAG, String.format("opening a new shell interface for [%s]", shell));
+		utils.log(TAG, String.format("opening new shell interface for [%s]", shell));
 		synchronized (this) {
 			process = (dir == null) ? Runtime.getRuntime().exec(shell) : Runtime.getRuntime().exec(shell, null, new File(dir));
 			stdin = new DataOutputStream(process.getOutputStream());
