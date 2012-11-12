@@ -17,22 +17,18 @@ public abstract class ProgressRunner {
 
 	public ProgressRunner(MyUtils u, String mProgress, String mSuccess, String mError) {
 		utils = u;
-		init(mProgress, mSuccess, mError);
-	}
-
-	public ProgressRunner(MyUtils u, int mProgress, int mSuccess, int mError) {
-		utils = u;
-		init(
-			(mProgress > 0) ? utils.getContext().getText(mProgress).toString() : null,
-			(mSuccess > 0) ? utils.getContext().getText(mSuccess).toString() : null,
-			(mError > 0) ? utils.getContext().getText(mError).toString() : null
-		);
-	}
-
-	private void init(String mProgress, String mSuccess, String mError) {
 		msg_progress = mProgress;
 		msg_success = mSuccess;
 		msg_error = mError;
+	}
+
+	public ProgressRunner(MyUtils u, int mProgress, int mSuccess, int mError) {
+		this(
+			u, 
+			(mProgress > 0) ? u.getContext().getText(mProgress).toString() : null,
+			(mSuccess > 0) ? u.getContext().getText(mSuccess).toString() : null,
+			(mError > 0) ? u.getContext().getText(mError).toString() : null
+		);
 	}
 
 	public void show() {

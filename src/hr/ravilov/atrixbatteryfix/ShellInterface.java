@@ -11,27 +11,28 @@ public class ShellInterface {
 
 	private MyUtils utils;
 	private String shell = null;
+	private String dir = null;
 	private volatile Process process = null;
 	private volatile DataOutputStream stdin = null;
 	private volatile DataInputStream stdout = null;
 	private volatile DataInputStream stderr = null;
 	private volatile boolean runningCommand = false;
 
-	public ShellInterface(MyUtils u, String sh, String dir) throws Exception {
+	public ShellInterface(MyUtils u, String sh, String d) throws Exception {
 		utils = u;
-		init(sh, dir);
-	}
-
-	public ShellInterface(MyUtils u, String sh) throws Exception {
-		utils = u;
-		init(sh, null);
-	}
-
-	protected void init(String sh, String dir) throws Exception {
 		shell = sh;
+		dir = d;
 		if (shell == null || shell.equals("")) {
 			throw new Exception("shell not defined");
 		}
+		open();
+	}
+
+	public ShellInterface(MyUtils u, String sh) throws Exception {
+		this(u, sh, null);
+	}
+
+	protected void open() throws Exception {
 		utils.log(TAG, String.format("opening a new shell interface for [%s]", shell));
 		synchronized (this) {
 			process = (dir == null) ? Runtime.getRuntime().exec(shell) : Runtime.getRuntime().exec(shell, null, new File(dir));
