@@ -157,6 +157,7 @@ public class MonitorService extends Service {
 			}
 			settings = (new Settings()).init(utils);
 			fix = new BatteryFix(utils, settings, info, true);
+			setForeground(true);
 			startThread();
 			if (settings.prefNotifications()) {
 				if (notificationId > 0) {
