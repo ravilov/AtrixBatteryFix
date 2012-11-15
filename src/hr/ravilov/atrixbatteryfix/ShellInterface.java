@@ -33,7 +33,7 @@ public class ShellInterface {
 	}
 
 	protected void open() throws Exception {
-		utils.log(TAG, String.format("opening new shell interface for [%s]", shell));
+		utils.log(TAG, "opening new shell interface for [%s]", shell);
 		synchronized (this) {
 			process = (dir == null) ? Runtime.getRuntime().exec(shell) : Runtime.getRuntime().exec(shell, null, new File(dir));
 			stdin = new DataOutputStream(process.getOutputStream());
@@ -41,7 +41,6 @@ public class ShellInterface {
 			stderr = new DataInputStream(process.getErrorStream());
 		}
 		try {
-			//Thread.sleep(300);
 			long time = System.currentTimeMillis();
 			while (System.currentTimeMillis() < time + 300) {
 				Thread.yield();
@@ -234,7 +233,6 @@ public class ShellInterface {
 		}
 		while (runningCommand && !force) {
 			try {
-				//Thread.sleep(100);
 				long time = System.currentTimeMillis();
 				while (System.currentTimeMillis() < time + 100) {
 					Thread.yield();
@@ -297,7 +295,6 @@ public class ShellInterface {
 	public void waitForOutput() throws Exception {
 		while (!hasOutput()) {
 			try {
-				//Thread.sleep(200);
 				Thread.yield();
 			}
 			catch (Exception ex) { }
@@ -307,7 +304,6 @@ public class ShellInterface {
 	public void waitForError() throws Exception {
 		while (!hasError()) {
 			try {
-				//Thread.sleep(200);
 				Thread.yield();
 			}
 			catch (Exception ex) { }
@@ -317,7 +313,6 @@ public class ShellInterface {
 	public void waitForAny() throws Exception {
 		while (!hasOutput() && !hasError()) {
 			try {
-				//Thread.sleep(200);
 				Thread.yield();
 			}
 			catch (Exception ex) { }
@@ -359,7 +354,6 @@ public class ShellInterface {
 	public String sendAndReceive(String cmd) throws Exception {
 		while (runningCommand) {
 			try {
-				//Thread.sleep(100);
 				Thread.yield();
 			}
 			catch (Exception ex) { }

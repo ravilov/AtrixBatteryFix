@@ -94,18 +94,18 @@ public class BatteryInfo {
 			if (lastVoltage == null || lastTime <= 0 || !lastVoltage.equals(battVoltage)) {
 				lastVoltage = battVoltage;
 				lastTime = System.currentTimeMillis();
-				utils.log("got new voltage %s", (Object)lastVoltage);
+				//utils.log("got new voltage %s", (Object)lastVoltage);
 			} else {
 				long time = System.currentTimeMillis();
-				utils.log("voltage stayed at %s for %d ms", (Object)lastVoltage, time - lastTime);
 				seemsFull = (time - lastTime >= MAX_TIME) ? true : false;
+				//utils.log("voltage stayed at %s for %d ms", (Object)lastVoltage, time - lastTime);
 			}
 		} else {
 			lastVoltage = null;
 			lastTime = -1;
 			return;
 		}
-		log();
+		//log();
 	}
 
 	public void refresh() {

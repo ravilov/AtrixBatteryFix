@@ -249,12 +249,12 @@ public class BatteryFix {
 	}
 
 	public void monStart() {
-		utils.log("starting battmon service");
+		//utils.log("starting battmon service");
 		utils.getContext().startService(new Intent(utils.getContext(), MonitorService.class));
 	}
 
 	public void monStop() {
-		utils.log("stopping battmon service");
+		//utils.log("stopping battmon service");
 		utils.getContext().stopService(new Intent(utils.getContext(), MonitorService.class));
 	}
 
