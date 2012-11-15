@@ -56,7 +56,7 @@ public class MonitorService extends Service {
 				synchronized (this) {
 					actionDone = true;
 				}
-				utils.log("starting auto-action");
+				utils.log("performing auto-action");
 				if (settings.prefAutoFix() || true) {
 					try {
 						fix.fixBattery();
@@ -89,12 +89,7 @@ public class MonitorService extends Service {
 						if (info.isOnPower && (info.isFull || info.seemsFull)) {
 							action();
 						}
-						if (info.isFull) {
-							synchronized (MonitorService.this) {
-								thTerminate = true;
-							}
-							Thread.currentThread().interrupt();
-						}
+						Thread.currentThread().interrupt();
 					}
 				};
 				utils.log("registering receiver");
