@@ -130,6 +130,7 @@ public class MonitorService extends Service {
 					}
 					catch (Exception ex) { }
 				}
+				stop();
 			}
 		});
 		synchronized (this) {
