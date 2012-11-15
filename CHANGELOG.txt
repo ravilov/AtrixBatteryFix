@@ -1,3 +1,9 @@
+0.35-beta1
+	- added a new option: only run the auto-action if the battery
+	  is not already at 100% when done charging
+	- removed the debug messages, no longer needed
+
+
 0.31-beta2
 	- improved the monitoring service
 	- added some debug messages

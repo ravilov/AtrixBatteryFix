@@ -16,6 +16,7 @@ public class Settings extends PreferenceActivity {
 		PREF_BATTSTATS = "battstats",
 		PREF_AUTOFIX = "autofix",
 		PREF_AUTOACTION = "autoaction",
+		PREF_NON100 = "non100",
 		PREF_NOUSBCHARGING = "nousbcharging"
 	;
 
@@ -118,6 +119,7 @@ public class Settings extends PreferenceActivity {
 
 	protected static SharedPreferences pref;
 	protected CheckBoxPreference nousbcharging;
+	protected CheckBoxPreference non100;
 	protected ListPreference autoaction;
 	private Prefs prefs;
 	private MyUtils utils;
@@ -138,6 +140,7 @@ public class Settings extends PreferenceActivity {
 		prefs.add(PREF_BATTSTATS, new Pref<Boolean>());
 		prefs.add(PREF_AUTOFIX, new Pref<Boolean>());
 		prefs.add(PREF_AUTOACTION, new Pref<AutoAction>());
+		prefs.add(PREF_NON100, new Pref<Boolean>());
 		prefs.add(PREF_NOUSBCHARGING, new Pref<Boolean>());
 		pref = PreferenceManager.getDefaultSharedPreferences(utils.getContext());
 		load();
@@ -151,14 +154,17 @@ public class Settings extends PreferenceActivity {
 		utils = new MyUtils(this);
 		fix = new BatteryFix(utils, this.init(utils), new BatteryInfo(utils), false);
 		addPreferencesFromResource(R.xml.prefs);
-		nousbcharging = (CheckBoxPreference)findPreference("nousbcharging");
+		nousbcharging = (CheckBoxPreference)findPreference(PREF_NOUSBCHARGING);
+		non100 = (CheckBoxPreference)findPreference(PREF_NON100);
+		autoaction = (ListPreference)findPreference(PREF_AUTOACTION);
 		nousbcharging.setEnabled(fix.canCharging() ? true : false);
-		autoaction = (ListPreference)findPreference("autoaction");
 		aaSetSummary();
+		setNon100();
 		autoaction.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference pref, Object value) {
 				aaSetSummary((String)value);
+				setNon100((String)value);
 				return true;
 			}
 		});
@@ -170,6 +176,15 @@ public class Settings extends PreferenceActivity {
 
 	protected void aaSetSummary() {
 		aaSetSummary(autoaction.getValue());
+	}
+
+	protected void setNon100(String value) {
+		AutoAction aa = cvt.getAutoAction(value);
+		non100.setEnabled((aa == AutoAction.NONE) ? false : true);
+	}
+
+	protected void setNon100() {
+		setNon100(autoaction.getValue());
 	}
 
 	public boolean hasOldProps() {
@@ -212,6 +227,7 @@ public class Settings extends PreferenceActivity {
 		prefs.get(PREF_AUTOFIX).set(false);
 		prefs.get(PREF_NOTIFICATIONS).set(true);
 		prefs.get(PREF_AUTOACTION).set(AutoAction.NONE);
+		prefs.get(PREF_NON100).set(true);
 		prefs.get(PREF_BATTSTATS).set(false);
 		prefs.get(PREF_NOUSBCHARGING).set(false);
 		prefs.get(PREF_ABOUT).set(true);
@@ -219,6 +235,7 @@ public class Settings extends PreferenceActivity {
 			prefs.get(PREF_AUTOFIX).set(pref.getBoolean(PREF_AUTOFIX, ((Boolean)prefs.get(PREF_AUTOFIX).value).booleanValue()));
 			prefs.get(PREF_NOTIFICATIONS).set(pref.getBoolean(PREF_NOTIFICATIONS, ((Boolean)prefs.get(PREF_NOTIFICATIONS).value).booleanValue()));
 			prefs.get(PREF_AUTOACTION).set(cvt.getAutoAction(pref.getString(PREF_AUTOACTION, cvt.getEntry((AutoAction)prefs.get(PREF_AUTOACTION).value))));
+			prefs.get(PREF_NON100).set(pref.getBoolean(PREF_NON100, ((Boolean)prefs.get(PREF_NON100).value).booleanValue()));
 			prefs.get(PREF_BATTSTATS).set(pref.getBoolean(PREF_BATTSTATS, ((Boolean)prefs.get(PREF_BATTSTATS).value).booleanValue()));
 			prefs.get(PREF_NOUSBCHARGING).set(pref.getBoolean(PREF_NOUSBCHARGING, ((Boolean)prefs.get(PREF_NOUSBCHARGING).value).booleanValue()));
 			prefs.get(PREF_ABOUT).set(pref.getBoolean(PREF_ABOUT, ((Boolean)prefs.get(PREF_ABOUT).value).booleanValue()));
@@ -235,6 +252,7 @@ public class Settings extends PreferenceActivity {
 		editor.putBoolean(PREF_AUTOFIX, ((Boolean)prefs.get(PREF_AUTOFIX).value).booleanValue());
 		editor.putBoolean(PREF_NOTIFICATIONS, ((Boolean)prefs.get(PREF_NOTIFICATIONS).value).booleanValue());
 		editor.putString(PREF_AUTOACTION, cvt.getEntry((AutoAction)prefs.get(PREF_AUTOACTION).value));
+		editor.putBoolean(PREF_NON100, ((Boolean)prefs.get(PREF_NON100).value).booleanValue());
 		editor.putBoolean(PREF_BATTSTATS, ((Boolean)prefs.get(PREF_BATTSTATS).value).booleanValue());
 		editor.putBoolean(PREF_NOUSBCHARGING, ((Boolean)prefs.get(PREF_NOUSBCHARGING).value).booleanValue());
 		editor.putBoolean(PREF_ABOUT, ((Boolean)prefs.get(PREF_ABOUT).value).booleanValue());
@@ -314,6 +332,15 @@ public class Settings extends PreferenceActivity {
 
 	public AutoAction prefAutoAction() {
 		return prefAutoAction(null);
+	}
+
+	public boolean prefNon100(Boolean value) {
+		prefs.get(PREF_NON100).set(value);
+		return (Boolean)prefs.get(PREF_NON100).value;
+	}
+
+	public boolean prefNon100() {
+		return prefNon100(null);
 	}
 
 	public boolean prefBattStats(Boolean value) {

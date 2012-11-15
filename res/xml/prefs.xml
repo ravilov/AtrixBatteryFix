@@ -3,6 +3,7 @@
 	<PreferenceCategory android:title="@string/pref_section_autoactions">
 		<CheckBoxPreference android:key="autofix" android:title="@string/pref_autofix" android:summary="@string/pref_autofix_" android:defaultValue="false" />
 		<ListPreference android:key="autoaction" android:title="@string/pref_autoaction" android:entries="@array/pref_autoaction_entries" android:entryValues="@array/pref_autoaction_values" android:defaultValue="none" />
+		<CheckBoxPreference android:key="non100" android:title="@string/pref_non100" android:summary="@string/pref_non100_" android:defaultValue="true" />
 		<CheckBoxPreference android:key="nousbcharging" android:title="@string/pref_nousbcharging" android:summary="@string/pref_nousbcharging_" android:defaultValue="false" />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/pref_section_general">

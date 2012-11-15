@@ -117,7 +117,7 @@ public final class R {
         public static final int msg_stop=0x7f08000f;
         public static final int msg_usb_disabled=0x7f08001b;
         public static final int msg_usb_enabled=0x7f08001c;
-        public static final int no_show_about=0x7f080051;
+        public static final int no_show_about=0x7f080053;
         public static final int nocharging=0x7f08000b;
         public static final int notifications=0x7f080003;
         public static final int novalue=0x7f080001;
@@ -127,16 +127,18 @@ public final class R {
         public static final int pref_autoaction_restart=0x7f08004a;
         public static final int pref_autofix=0x7f080045;
         public static final int pref_autofix_=0x7f080046;
-        public static final int pref_battstats=0x7f08004d;
-        public static final int pref_battstats_=0x7f08004e;
-        public static final int pref_notifications=0x7f08004c;
-        public static final int pref_nousbcharging=0x7f08004f;
-        public static final int pref_nousbcharging_=0x7f080050;
+        public static final int pref_battstats=0x7f08004f;
+        public static final int pref_battstats_=0x7f080050;
+        public static final int pref_non100=0x7f08004b;
+        public static final int pref_non100_=0x7f08004c;
+        public static final int pref_notifications=0x7f08004e;
+        public static final int pref_nousbcharging=0x7f080051;
+        public static final int pref_nousbcharging_=0x7f080052;
         public static final int pref_section_autoactions=0x7f080044;
-        public static final int pref_section_general=0x7f08004b;
+        public static final int pref_section_general=0x7f08004d;
         public static final int prefs_title=0x7f080043;
-        public static final int text_about=0x7f080052;
-        public static final int text_licence=0x7f080053;
+        public static final int text_about=0x7f080054;
+        public static final int text_licence=0x7f080055;
     }
     public static final class xml {
         public static final int prefs=0x7f040000;

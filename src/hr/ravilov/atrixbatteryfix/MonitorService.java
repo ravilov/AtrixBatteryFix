@@ -16,6 +16,7 @@ public class MonitorService extends Service {
 	private BatteryFix fix;
 	private Settings settings;
 	private int notificationId = -1;
+	private BroadcastReceiver br = null;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -44,17 +45,21 @@ public class MonitorService extends Service {
 	public void onLowMemory() {
 	}
 
-	protected void startThread() throws Exception {
-		th = new Thread(new Runnable() {
-			private BroadcastReceiver br;
+	protected Runnable makeRunner() {
+		return new Runnable() {
 			private volatile boolean actionDone = false;
+			private Service svc = MonitorService.this;
 
 			private void action() {
 				if (actionDone) {
 					return;
 				}
-				synchronized (this) {
+				synchronized (svc) {
 					actionDone = true;
+				}
+				settings.load();
+				if (settings.prefNon100() && Integer.valueOf(info.battShown) >= 100) {
+					return;
 				}
 				//utils.log("performing auto-action");
 				if (settings.prefAutoFix() || true) {
@@ -80,31 +85,42 @@ public class MonitorService extends Service {
 			}
 
 			private void addFilter() {
-				IntentFilter f = new IntentFilter();
-				f.addAction(Intent.ACTION_BATTERY_CHANGED);
-				br = new BroadcastReceiver() {
-					@Override
-					public void onReceive(Context c, Intent i) {
-						info.refresh(i);
-						if (info.isOnPower && (info.isFull || info.seemsFull)) {
-							action();
+				if (br != null) {
+					return;
+				}
+				synchronized (svc) {
+					IntentFilter f = new IntentFilter();
+					f.addAction(Intent.ACTION_BATTERY_CHANGED);
+					br = new BroadcastReceiver() {
+						@Override
+						public void onReceive(Context c, Intent i) {
+							info.refresh(i);
+							if (info.isOnPower && (info.isFull || info.seemsFull)) {
+								action();
+							}
+							Thread.currentThread().interrupt();
 						}
-						Thread.currentThread().interrupt();
-					}
-				};
-				//utils.log("registering receiver");
-				registerReceiver(br, f);
+					};
+					//utils.log("registering receiver");
+					registerReceiver(br, f);
+				}
 			}
 
 			private void delFilter() {
-				//utils.log("unregistering receiver");
-				unregisterReceiver(br);
+				if (br == null) {
+					return;
+				}
+				synchronized (svc) {
+					//utils.log("unregistering receiver");
+					unregisterReceiver(br);
+					br = null;
+				}
 			}
 
 			@Override
 			public void run() {
 				Thread.setDefaultUncaughtExceptionHandler(new MyExceptionCatcher());
-				synchronized (this) {
+				synchronized (svc) {
 					actionDone = false;
 				}
 				addFilter();
@@ -133,7 +149,11 @@ public class MonitorService extends Service {
 				}
 				catch (Exception ex) { }
 			}
-		});
+		};
+	}
+
+	protected void startThread() throws Exception {
+		th = new Thread(makeRunner());
 		synchronized (this) {
 			thTerminate = false;
 		}
@@ -142,11 +162,21 @@ public class MonitorService extends Service {
 	}
 
 	protected void stopThread() throws Exception {
+		if (br != null) {
+			synchronized (this) {
+				//utils.log("unregistering receiver");
+				unregisterReceiver(br);
+				br = null;
+			}
+		}
 		synchronized (this) {
 			thTerminate = true;
 		}
-		th.interrupt();
-		th.join();
+		try {
+			th.interrupt();
+			th.join();
+		}
+		catch (InterruptedException ex) { }
 	}
 
 	protected void start() {
@@ -176,7 +206,11 @@ public class MonitorService extends Service {
 			}
 		}
 		catch (Exception ex) {
-			Toast.makeText(this, String.format(getString(R.string.err_start), ex.getMessage()), Toast.LENGTH_LONG).show();
+			String msg = ex.getMessage();
+			if (msg == null || msg.equals("")) {
+				msg = ex.toString();
+			}
+			Toast.makeText(this, String.format(getString(R.string.err_start), msg), Toast.LENGTH_LONG).show();
 		}
 	}
 	
@@ -188,7 +222,10 @@ public class MonitorService extends Service {
 			stopThread();
 			if (settings.prefNotifications()) {
 				if (notificationId > 0) {
-					fix.hideNotification(notificationId);
+					try {
+						fix.hideNotification(notificationId);
+					}
+					catch (Exception ex) { }
 					notificationId = -1;
 				}
 				fix.showNotification(getString(R.string.msg_stop));
@@ -197,7 +234,11 @@ public class MonitorService extends Service {
 			}
 		}
 		catch (Exception ex) {
-			Toast.makeText(this, String.format(getString(R.string.err_stop), ex.getMessage()), Toast.LENGTH_LONG).show();
+			String msg = ex.getMessage();
+			if (msg == null || msg.equals("")) {
+				msg = ex.toString();
+			}
+			Toast.makeText(this, String.format(getString(R.string.err_stop), msg), Toast.LENGTH_LONG).show();
 		}
 		th = null;
 	}
