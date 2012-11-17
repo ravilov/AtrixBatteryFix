@@ -61,7 +61,7 @@ public class MonitorService extends Service {
 				if (settings.prefNon100() && Integer.valueOf(info.battShown) >= 100) {
 					return;
 				}
-				//utils.log("performing auto-action");
+				utils.log("performing auto-action");
 				if (settings.prefAutoFix() || true) {
 					try {
 						fix.fixBattery();
@@ -81,7 +81,7 @@ public class MonitorService extends Service {
 					default:
 						break;
 				}
-				//utils.log("auto-action done");
+				utils.log("auto-action done");
 			}
 
 			private void addFilter() {
@@ -101,7 +101,7 @@ public class MonitorService extends Service {
 							Thread.currentThread().interrupt();
 						}
 					};
-					//utils.log("registering receiver");
+					utils.log("registering receiver");
 					registerReceiver(br, f);
 				}
 			}
@@ -111,7 +111,7 @@ public class MonitorService extends Service {
 					return;
 				}
 				synchronized (svc) {
-					//utils.log("unregistering receiver");
+					utils.log("unregistering receiver");
 					unregisterReceiver(br);
 					br = null;
 				}
@@ -124,7 +124,7 @@ public class MonitorService extends Service {
 					actionDone = false;
 				}
 				addFilter();
-				//utils.log("entering main service loop");
+				utils.log("entering main service loop");
 				while (info.isOnPower && !info.isFull && !thTerminate) {
 					try {
 						Thread.sleep(60 * 1000);
@@ -132,10 +132,10 @@ public class MonitorService extends Service {
 					catch (Exception ex) { }
 					info.refresh();
 				}
-				//utils.log("exiting main service loop");
+				utils.log("exiting main service loop");
 				delFilter();
 				if (info.isOnPower && actionDone) {
-					//utils.log("settling down");
+					utils.log("settling down");
 					try {
 						Thread.sleep(5 * 1000);
 					}
@@ -164,7 +164,7 @@ public class MonitorService extends Service {
 	protected void stopThread() throws Exception {
 		if (br != null) {
 			synchronized (this) {
-				//utils.log("unregistering receiver");
+				utils.log("unregistering receiver");
 				unregisterReceiver(br);
 				br = null;
 			}
