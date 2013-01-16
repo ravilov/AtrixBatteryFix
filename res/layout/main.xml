@@ -36,33 +36,4 @@
 			</TableLayout>
 		</ScrollView>
 	</LinearLayout>
-	<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="20dip" android:paddingTop="3dip" android:paddingBottom="3dip" android:paddingLeft="8dip" android:paddingRight="8dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:background="@android:drawable/divider_horizontal_dim_dark" android:textStyle="bold" android:text="@string/batt_title" />
-	<ScrollView android:layout_width="fill_parent" android:layout_height="fill_parent">
-		<TableLayout android:layout_width="fill_parent" android:layout_height="fill_parent" android:stretchColumns="*">
-			<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/batt_source" />
-				<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/batt_state" />
-			</TableRow>
-			<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView android:id="@+id/batt_source" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
-				<TextView android:id="@+id/batt_state" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
-			</TableRow>
-			<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/batt_voltage" />
-				<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/batt_temp" />
-			</TableRow>
-			<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView android:id="@+id/batt_voltage" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
-				<TextView android:id="@+id/batt_temp" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
-			</TableRow>
-			<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/batt_shown" />
-				<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/batt_actual" />
-			</TableRow>
-			<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
-				<TextView android:id="@+id/batt_shown" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
-				<TextView android:id="@+id/batt_actual" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
-			</TableRow>
-		</TableLayout>
-	</ScrollView>
 </LinearLayout>
