@@ -286,7 +286,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 			battVoltage.setText("-");
 		}
 		if (info.battTemp != null) {
-			battTemp.setText(String.valueOf(Float.valueOf(info.battTemp) / 10) + " °C");
+			battTemp.setText(Html.fromHtml(String.valueOf(Float.valueOf(info.battTemp) / 10) + " &deg;C"));
 		} else {
 			battTemp.setText("-");
 		}
