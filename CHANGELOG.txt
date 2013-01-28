@@ -1,3 +1,14 @@
+0.40
+	- added the uptime monitor
+	- renamed "battery monitor" to "system monitor"
+	- a little cleanup to make it more compatible with the newer SDK's
+	  lint checks
+
+
+0.36
+	- minor cosmetic changes
+
+
 0.35-beta1
 	- added a new option: only run the auto-action if the battery
 	  is not already at 100% when done charging

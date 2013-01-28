@@ -403,6 +403,7 @@ public class BatteryFix {
 				try {
 					BufferedReader in = new BufferedReader(new FileReader(f));
 					res = in.readLine().trim();
+					in.close();
 				}
 				catch (Exception ex) { }
 			}

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="fill_parent" android:layout_height="fill_parent" android:orientation="vertical">
 	<LinearLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="5dip" android:layout_marginBottom="10dip" android:layout_weight="0">
-		<Button android:id="@+id/buttonForce" android:layout_width="fill_parent" android:layout_height="70sp" android:text="@string/force" android:textStyle="bold" android:layout_weight="1" />
-		<Button android:id="@+id/buttonFix" android:layout_width="fill_parent" android:layout_height="70sp" android:text="@string/fix" android:layout_weight="1" />
-		<ToggleButton android:id="@+id/buttonCharging" android:layout_width="fill_parent" android:layout_height="70sp" android:layout_gravity="center" android:textOn="@string/charging_on" android:textOff="@string/charging_off" android:layout_weight="1" />
+		<Button android:id="@+id/buttonForce" android:layout_width="fill_parent" android:layout_height="70sp" android:text="@string/force" android:textStyle="bold" />
+		<Button android:id="@+id/buttonFix" android:layout_width="fill_parent" android:layout_height="70sp" android:text="@string/fix" />
+		<ToggleButton android:id="@+id/buttonCharging" android:layout_width="fill_parent" android:layout_height="70sp" android:layout_gravity="center" android:textOn="@string/charging_on" android:textOff="@string/charging_off" />
 	</LinearLayout>
 	<LinearLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="20dip" android:layout_marginBottom="20dip" android:layout_weight="0" android:gravity="bottom" android:layout_gravity="bottom">
-		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingTop="3dip" android:paddingBottom="3dip" android:paddingLeft="8dip" android:paddingRight="8dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:background="@android:drawable/divider_horizontal_dim_dark" android:textStyle="bold" android:text="@string/batt_title" />
+		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingTop="3dip" android:paddingBottom="3dip" android:paddingLeft="8dip" android:paddingRight="8dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:background="@android:drawable/divider_horizontal_dim_dark" android:textStyle="bold" android:text="@string/mon_title" />
 		<ScrollView android:layout_width="fill_parent" android:layout_height="wrap_content">
 			<TableLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:stretchColumns="*">
 				<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
@@ -32,6 +32,12 @@
 				<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
 					<TextView android:id="@+id/batt_shown" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
 					<TextView android:id="@+id/batt_actual" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
+				</TableRow>
+				<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
+					<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="6dip" android:layout_marginLeft="2dip" android:layout_marginRight="2dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Small" android:text="@string/uptime" />
+				</TableRow>
+				<TableRow android:layout_width="fill_parent" android:layout_height="wrap_content">
+					<TextView android:id="@+id/uptime" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="2dip" android:paddingLeft="15dip" android:paddingRight="5dip" android:clickable="false" android:textAppearance="@android:style/TextAppearance.Medium" android:textStyle="bold" android:text="@string/novalue" />
 				</TableRow>
 			</TableLayout>
 		</ScrollView>

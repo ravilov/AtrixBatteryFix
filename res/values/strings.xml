@@ -55,7 +55,7 @@
 	<string name="err_restart_short">Error restarting battd</string>
 	<string name="err_charging">Error configuring charging!\n(%s)</string>
 	<string name="err_su">Error getting superuser auth!\n(%s)</string>
-	<string name="batt_title">Battery monitor</string>
+	<string name="mon_title">System monitor</string>
 	<string name="batt_source">Power source</string>
 	<string name="batt_source_battery">Battery</string>
 	<string name="batt_source_ac">AC</string>
@@ -71,6 +71,7 @@
 	<string name="batt_temp">Temperature</string>
 	<string name="batt_actual">Actual percentage</string>
 	<string name="batt_shown">Percentage shown</string>
+	<string name="uptime">System uptime</string>
 	<string name="menu_licence">Licence</string>
 	<string name="menu_about">About</string>
 	<string name="menu_settings">Settings</string>

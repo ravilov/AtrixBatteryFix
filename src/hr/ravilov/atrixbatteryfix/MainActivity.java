@@ -30,6 +30,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	private TextView battTemp;
 	private TextView battActual;
 	private TextView battShown;
+	private TextView uptime;
 	private Thread updater;
 	private volatile boolean updTerminate;
 	private boolean justStarted = false;
@@ -59,6 +60,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		battTemp = (TextView)findViewById(R.id.batt_temp);
 		battShown = (TextView)findViewById(R.id.batt_shown);
 		battActual = (TextView)findViewById(R.id.batt_actual);
+		uptime = (TextView)findViewById(R.id.uptime);
 		force.setOnClickListener(this);
 		fix.setOnClickListener(this);
 		charging.setOnClickListener(this);
@@ -320,6 +322,23 @@ public class MainActivity extends Activity implements View.OnClickListener {
 		} else {
 			charging.setEnabled(false);
 			charging.setText(R.string.nocharging);
+		}
+		if (info.uptime < 0) {
+			uptime.setText("-");
+		} else {
+			int days = 0, hours = 0, minutes = 0, seconds = (int)info.uptime;
+			minutes = (int)(seconds / 60);
+			seconds = seconds % 60;
+			hours = (int)(minutes / 60);
+			minutes = minutes % 60;
+			days = (int)(hours / 24);
+			hours = hours % 24;
+			uptime.setText(String.format("%dd %02d:%02d:%02d",
+				days,
+				hours,
+				minutes,
+				seconds
+			));
 		}
 	}
 }

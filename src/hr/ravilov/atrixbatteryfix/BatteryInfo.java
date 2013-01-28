@@ -23,6 +23,7 @@ public class BatteryInfo {
 	public String battHealth;
 	public String battVoltage;
 	public String battTemp;
+	public float uptime;
 	private MyUtils utils;
 	private int state;
 	private int plugged;
@@ -48,8 +49,12 @@ public class BatteryInfo {
 	}
 
 	static private String getFile(String filename) {
+		return getFile(filename, dir);
+	}
+
+	static private String getFile(String filename, String directory) {
 		try {
-			Scanner sc = new Scanner(new FileInputStream(dir + "/" + filename), "UTF-8");
+			Scanner sc = new Scanner(new FileInputStream(directory + "/" + filename), "UTF-8");
 			if (!sc.hasNextLine()) {
 				return null;
 			}
@@ -103,7 +108,16 @@ public class BatteryInfo {
 		} else {
 			lastVoltage = null;
 			lastTime = -1;
-			return;
+		}
+		uptime = -1;
+		String upt = getFile("uptime", "/proc");
+		if (upt != null && !upt.equals("")) {
+			try {
+				uptime = Float.valueOf(upt.split("\\s+")[0]);
+			}
+			catch (Exception ex) {
+				uptime = -1;
+			}
 		}
 		//log();
 	}
